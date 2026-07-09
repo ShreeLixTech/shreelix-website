@@ -68,9 +68,11 @@
 
   .lead-card{
     background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;
-    border:1px solid var(--border);cursor:pointer;transition:box-shadow .15s ease;
+    border:1px solid var(--border);cursor:pointer;transition:box-shadow .15s ease, transform .15s ease;
+    animation: cardIn .25s ease;
   }
-  .lead-card:hover{box-shadow:0 6px 16px rgba(11,31,58,0.1);}
+  @keyframes cardIn{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+  .lead-card:hover{box-shadow:0 6px 16px rgba(11,31,58,0.1);transform:translateY(-2px);}
   .lead-card .lname{font-weight:600;font-size:14px;color:var(--navy);}
   .lead-card .lcompany{font-size:12.5px;color:var(--muted);margin-top:2px;}
   .lead-card .lvalue{font-size:12.5px;color:var(--blue-deep);font-weight:600;margin-top:8px;}
@@ -109,6 +111,12 @@
   }
   .toast.show{transform:translateX(-50%) translateY(0);}
   .toast.error{background:var(--red);}
+
+  @media(max-width:640px){
+    header.page .row{flex-direction:column;align-items:flex-start;}
+    #openAddLead{width:100%;}
+    .modal{max-width:100%;margin:0 10px;}
+  }
 </style>
 </head>
 <body>
@@ -146,6 +154,23 @@
   </header>
 
   <div class="board" id="board"></div>
+
+<div class="wrap" id="statsWrap" style="display:none;padding-bottom:20px;margin-top:-20px;">
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="background:#fff;border:1px solid var--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var--muted);margin-bottom:4px;">Total leads</div>
+      <div id="statTotalLeads" style="font-size:22px;font-weight:700;color:var--navy);font-family:'Poppins',sans-serif;"></div>
+    </div>
+    <div style="background:#fff;border:1px solid var--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var--muted);margin-bottom:4px;">Pipeline value</div>
+      <div id="statPipelineValue" style="font-size:22px;font-weight:700;color:var--navy);font-family:'Poppins',sans-serif;"></div>
+    </div>
+    <div style="background:#fff;border:1px solid var--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var--muted);margin-bottom:4px;">Won (repeat customers)</div>
+      <div id="statWon" style="font-size:22px;font-weight:700;color:var--green);font-family:'Poppins',sans-serif;"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <div class="overlay" id="addOverlay">
@@ -245,6 +270,25 @@ async function loadLeads(){
 
 function renderBoard(){
   const board = document.getElementById('board');
+  const statsWrap = document.getElementById('statsWrap');
+
+  if (leads.length === 0) {
+    statsWrap.style.display = 'none';
+    board.innerHTML = `<div style="width:100%;padding:60px 20px;text-align:center;color:var(--muted);">
+      <div style="font-size:36px;margin-bottom:12px;">📋</div>
+      <div style="font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px;">No leads yet</div>
+      <div style="font-size:13.5px;">Add one manually, or submit the website contact form to see it appear here automatically.</div>
+    </div>`;
+    return;
+  }
+
+  statsWrap.style.display = 'block';
+  const totalValue = leads.reduce((s,l) => s + (l.value||0), 0);
+  const wonLeads = leads.filter(l => l.stage === 'won' || (l.source === 'retail-billing' && l.stage === 'qualified'));
+  document.getElementById('statTotalLeads').textContent = leads.length;
+  document.getElementById('statPipelineValue').textContent = money(totalValue);
+  document.getElementById('statWon').textContent = wonLeads.length;
+
   board.innerHTML = STAGES.map(stage => {
     const stageLeads = leads.filter(l => l.stage === stage.key);
     const total = stageLeads.reduce((sum, l) => sum + (l.value || 0), 0);
@@ -363,6 +407,9 @@ document.getElementById('addActivityBtn').addEventListener('click', async () => 
 
 document.getElementById('detailDeleteBtn').addEventListener('click', async () => {
   if (!currentDetailId) return;
+  const lead = leads.find(l => l.id === currentDetailId);
+  const name = lead ? lead.name : 'this lead';
+  if (!confirm(`Delete ${name}? This removes it for everyone using this shared demo.`)) return;
   try {
     await api('/leads/'+currentDetailId, {method:'DELETE'});
     toast('Lead deleted');
