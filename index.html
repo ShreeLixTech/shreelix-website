@@ -289,12 +289,64 @@
   <div class="wrap">
     <h2>Let's talk about what you're building.</h2>
     <p>Whether it's a single system or a full digital transformation, we'd like to understand your goals and explore how ShreeLix can help.</p>
-    <div class="contact-box">
-      <div class="contact-email">support.shreelix@gmail.com</div>
-      <div class="contact-sub">I personally read and reply to every message.</div>
+    <div class="contact-box" style="text-align:left;">
+      <div id="contactFormWrap" style="width:100%;">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;">Name *</label>
+        <input id="cf-name" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;margin-bottom:14px;" placeholder="Your name">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;">Company</label>
+        <input id="cf-company" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;margin-bottom:14px;" placeholder="Optional">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;">Email or phone *</label>
+        <input id="cf-contact" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:14px;margin-bottom:16px;" placeholder="How should we reach you?">
+        <button id="cf-submit" class="btn-primary" style="width:100%;border:none;cursor:pointer;">Send message</button>
+        <div id="cf-status" style="font-size:12.5px;color:var(--muted);margin-top:10px;text-align:center;"></div>
+      </div>
     </div>
+    <div class="contact-sub" style="margin-top:16px;">Prefer email? Reach us directly at <b>support.shreelix@gmail.com</b></div>
   </div>
 </section>
+
+<script>
+(function(){
+  const API = "https://retail-billing-system-hmq4.onrender.com";
+  const btn = document.getElementById('cf-submit');
+  const status = document.getElementById('cf-status');
+  btn.addEventListener('click', async () => {
+    const name = document.getElementById('cf-name').value.trim();
+    const company = document.getElementById('cf-company').value.trim();
+    const contact = document.getElementById('cf-contact').value.trim();
+    if (!name || !contact) {
+      status.textContent = 'Please fill in your name and email/phone.';
+      status.style.color = '#C0392B';
+      return;
+    }
+    const isEmail = contact.includes('@');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      const res = await fetch(API + '/leads', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          name, company: company || null,
+          email: isEmail ? contact : null,
+          phone: isEmail ? null : contact,
+          source: 'website', stage: 'new'
+        })
+      });
+      if (!res.ok) throw new Error();
+      status.textContent = "Thanks — we'll be in touch shortly.";
+      status.style.color = '#0E7A45';
+      document.getElementById('cf-name').value = '';
+      document.getElementById('cf-company').value = '';
+      document.getElementById('cf-contact').value = '';
+    } catch(e) {
+      status.textContent = "Couldn't send right now — please email us directly instead.";
+      status.style.color = '#C0392B';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Send message';
+    }
+  });
+})();
+</script>
 
 <footer>
   <div class="wrap">
