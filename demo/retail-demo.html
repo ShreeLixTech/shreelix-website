@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Demo — Retail Billing System | ShreeLix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1F3A; --navy-soft:#132A4D; --blue:#1E90FF; --blue-deep:#0B5FCC;
+    --amber:#F59E0B; --bg:#F8FAFC; --card:#FFFFFF; --text:#1E293B;
+    --muted:#5B6B82; --border:#E3E8F0; --green:#0E7A45; --green-bg:#E7F8F0;
+    --red:#C0392B; --red-bg:#FDECEA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--navy);}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px;}
+
+  nav{background:var(--navy);padding:16px 0;}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-weight:700;font-size:18px;color:#fff;}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;border:1px solid rgba(255,255,255,0.15);}
+  .back-link{font-size:13.5px;color:rgba(255,255,255,0.75);}
+  .back-link:hover{color:#fff;}
+
+  .banner{background:#FFF7E6;border-bottom:1px solid #F5D98B;padding:12px 0;}
+  .banner .wrap{display:flex;align-items:center;gap:10px;font-size:13.5px;color:#8A6416;}
+  .banner b{color:#6B4A0C;}
+
+  header.page{padding:40px 0 8px;}
+  header.page h1{font-size:30px;font-weight:700;}
+  header.page p{color:var(--muted);margin-top:8px;font-size:15px;max-width:600px;}
+
+  .status-row{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:var(--muted);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#ccc;}
+  .dot.live{background:var(--green);}
+  .dot.down{background:var(--red);}
+
+  .tabs{display:flex;gap:6px;margin:28px 0 20px;border-bottom:1px solid var(--border);}
+  .tab{padding:12px 18px;font-size:14.5px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;}
+  .tab.active{color:var(--navy);border-bottom-color:var(--blue);}
+
+  .panel{display:none;padding-bottom:60px;}
+  .panel.active{display:block;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;align-items:start;}
+  @media(max-width:800px){.grid2{grid-template-columns:1fr;}}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;}
+  .card h3{font-size:17px;font-weight:600;margin-bottom:16px;}
+
+  label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;margin-top:14px;}
+  label:first-child{margin-top:0;}
+  input, select{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+    font-family:'Inter',sans-serif;font-size:14px;background:#fff;color:var(--text);
+  }
+  input:focus, select:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--navy);color:#fff;padding:11px 20px;border-radius:8px;
+    font-weight:600;font-size:14px;border:none;cursor:pointer;margin-top:18px;width:100%;
+  }
+  .btn:hover{background:var(--navy-soft);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn.secondary{background:transparent;border:1.5px solid var(--border);color:var(--navy);}
+  .btn.small{width:auto;padding:6px 12px;font-size:12.5px;margin-top:0;}
+  .btn.danger{background:var(--red);}
+
+  table{width:100%;border-collapse:collapse;font-size:14px;}
+  th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--border);}
+  td{padding:12px;border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .empty{padding:36px 20px;text-align:center;color:var(--muted);font-size:14px;}
+  .empty .big{font-size:28px;margin-bottom:8px;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;}
+  .badge.ok{background:var(--green-bg);color:var(--green);}
+  .badge.low{background:#FFF3E0;color:#B8720C;}
+  .badge.out{background:var(--red-bg);color:var(--red);}
+
+  .bill-row{display:flex;gap:10px;align-items:center;margin-top:10px;padding:10px;background:var(--bg);border-radius:8px;}
+  .bill-row input{flex:0.6;}
+  .bill-row .line-total{width:80px;text-align:right;font-weight:600;color:var(--navy);font-size:13.5px;}
+  .bill-row .remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;}
+
+  .search-select{position:relative;flex:1.4;}
+  .search-select input{width:100%;}
+  .search-select .dropdown{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;
+    border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.08);
+    max-height:220px;overflow-y:auto;z-index:20;display:none;
+  }
+  .search-select .dropdown.open{display:block;}
+  .search-select .option{padding:9px 12px;font-size:13.5px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;}
+  .search-select .option:hover, .search-select .option.highlighted{background:var(--bg);}
+  .search-select .option .oname{color:var(--text);}
+  .search-select .option .oprice{color:var(--muted);font-size:12.5px;white-space:nowrap;}
+  .search-select .no-match{padding:12px;font-size:13px;color:var(--muted);text-align:center;}
+
+  .total-box{margin-top:18px;padding-top:16px;border-top:2px solid var(--navy);display:flex;justify-content:space-between;align-items:baseline;}
+  .total-box .label{font-size:13px;color:var(--muted);}
+  .total-box .value{font-size:26px;font-weight:800;color:var(--navy);font-family:'Poppins',sans-serif;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);
+    background:var(--navy);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:500;
+    transition:transform .25s ease;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast.error{background:var(--red);}
+
+  .loading-row{padding:20px;text-align:center;color:var(--muted);font-size:13.5px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="mark">S</span> ShreeLix</div>
+    <a class="back-link" href="../">&larr; Back to website</a>
+  </div>
+</nav>
+
+<div class="banner">
+  <div class="wrap">
+    <span>&#9432;</span>
+    <span><b>Shared live demo</b> — this connects to a real database. Everything you add here is visible to other visitors trying the demo too. Feel free to explore freely.</span>
+  </div>
+</div>
+
+<header class="page">
+  <div class="wrap">
+    <h1>Retail Inventory, Billing & CRM</h1>
+    <p>A live, working slice of the system ShreeLix builds for small retail businesses — add stock, create a bill, and watch it calculate in real time.</p>
+    <div class="status-row">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Checking connection to live API…</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" data-tab="inventory">Inventory</div>
+    <div class="tab" data-tab="billing">New Bill</div>
+    <div class="tab" data-tab="history">Bill History</div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="panel active" id="panel-inventory">
+    <div class="grid2">
+      <div class="card">
+        <h3>Add product</h3>
+        <label for="p-name">Product name</label>
+        <input id="p-name" placeholder="e.g. Basmati Rice 5kg">
+        <label for="p-price">Price (₹)</label>
+        <input id="p-price" type="number" min="0" step="0.01" placeholder="0.00">
+        <label for="p-stock">Stock quantity</label>
+        <input id="p-stock" type="number" min="0" placeholder="0">
+        <button class="btn" id="addProductBtn">Add to inventory</button>
+
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+          <h3 style="font-size:15px;">Bulk upload (Excel/CSV)</h3>
+          <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;margin-bottom:12px;">Columns: <b>name</b>, <b>price</b>, <b>stock_qty</b> (header names, any order)</p>
+          <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="padding:8px;font-size:13px;">
+          <button class="btn secondary" id="uploadExcelBtn" style="margin-top:10px;">Upload & import</button>
+          <div id="excelStatus" style="font-size:12.5px;color:var(--muted);margin-top:10px;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Current inventory</h3>
+        <div id="inventoryTableWrap">
+          <div class="loading-row">Loading inventory…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILLING -->
+  <div class="panel" id="panel-billing">
+    <div class="grid2">
+      <div class="card">
+        <h3>Customer (optional)</h3>
+        <label for="c-name">Name</label>
+        <input id="c-name" placeholder="Walk-in customer">
+        <label for="c-phone">Phone</label>
+        <input id="c-phone" placeholder="Optional">
+        <p style="font-size:12.5px;color:var(--muted);margin-top:10px;">Leave blank for a quick walk-in sale — no customer record required.</p>
+      </div>
+      <div class="card">
+        <h3>Bill items</h3>
+        <div id="billItemsWrap"></div>
+        <button class="btn secondary" id="addLineBtn" style="margin-top:14px;">+ Add item</button>
+        <div class="total-box">
+          <div class="label">Total</div>
+          <div class="value" id="billTotal">₹0</div>
+        </div>
+        <button class="btn" id="createBillBtn">Create bill</button>
+        <div id="billSuccessBox" style="display:none;margin-top:16px;padding:16px;background:var(--green-bg);border-radius:10px;">
+          <div style="font-weight:600;color:var(--green);font-size:14px;margin-bottom:10px;">✓ Bill #<span id="successBillId"></span> created</div>
+          <button class="btn secondary" id="downloadPdfBtn" style="margin-top:0;">Download PDF invoice</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="panel" id="panel-history">
+    <div class="card">
+      <h3>Recent bills</h3>
+      <div id="historyWrap">
+        <div class="loading-row">Loading bills…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const API = "https://retail-billing-system-hmq4.onrender.com";
+let products = [];
+let billLines = [];
+let lastCreatedBill = null;
+
+// ---------- Utilities ----------
+function toast(msg, isError=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(()=> t.className = 'toast', 2800);
+}
+function money(n){ return '₹' + Number(n).toLocaleString('en-IN', {minimumFractionDigits:0, maximumFractionDigits:2}); }
+
+async function api(path, opts={}) {
+  const res = await fetch(API + path, {
+    headers: {'Content-Type':'application/json'},
+    ...opts
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({detail:'Request failed'}));
+    throw new Error(err.detail || 'Request failed');
+  }
+  return res.json();
+}
+
+// ---------- Connection check ----------
+async function checkStatus(){
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  try {
+    await api('/health');
+    dot.className = 'dot live';
+    text.textContent = 'Connected to live API — this demo is fully functional';
+  } catch(e) {
+    dot.className = 'dot down';
+    text.textContent = 'API is waking up (free-tier hosting sleeps when idle) — retrying...';
+    setTimeout(checkStatus, 4000);
+  }
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'billing') renderBillLines();
+    if (tab.dataset.tab === 'history') loadHistory();
+  });
+});
+
+// ---------- Inventory ----------
+async function loadInventory(){
+  const wrap = document.getElementById('inventoryTableWrap');
+  try {
+    products = await api('/products');
+    if (products.length === 0) {
+      wrap.innerHTML = `<div class="empty"><div class="big">📦</div>No products yet — add your first item on the left.</div>`;
+      return;
+    }
+    let rows = products.map(p => {
+      let badge = p.stock_qty === 0
+        ? `<span class="badge out">Out of stock</span>`
+        : p.stock_qty < 5
+          ? `<span class="badge low">Low stock</span>`
+          : `<span class="badge ok">In stock</span>`;
+      return `<tr>
+        <td>${escapeHtml(p.name)}</td>
+        <td class="num">${money(p.price)}</td>
+        <td class="num">${p.stock_qty}</td>
+        <td>${badge}</td>
+        <td><button class="btn small danger" onclick="deleteProduct(${p.id})">Delete</button></td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<table>
+      <thead><tr><th>Product</th><th class="num">Price</th><th class="num">Stock</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty">Couldn't load inventory — the API may still be waking up. Try again in a few seconds.</div>`;
+  }
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+document.getElementById('addProductBtn').addEventListener('click', async () => {
+  const name = document.getElementById('p-name').value.trim();
+  const price = parseFloat(document.getElementById('p-price').value);
+  const stock = parseInt(document.getElementById('p-stock').value || '0');
+  if (!name || isNaN(price)) { toast('Enter a product name and price', true); return; }
+
+  const btn = document.getElementById('addProductBtn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    await api('/products', {method:'POST', body: JSON.stringify({name, price, stock_qty: stock})});
+    toast('Product added');
+    document.getElementById('p-name').value = '';
+    document.getElementById('p-price').value = '';
+    document.getElementById('p-stock').value = '';
+    loadInventory();
+  } catch(e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add to inventory';
+  }
+});
+
+async function deleteProduct(id){
+  try {
+    await api('/products/'+id, {method:'DELETE'});
+    toast('Product removed');
+    loadInventory();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+// ---------- Bulk Excel upload ----------
+function normalizeKey(k){ return String(k).trim().toLowerCase().replace(/\s+/g,'_'); }
+
+document.getElementById('uploadExcelBtn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('excelFileInput');
+  const statusEl = document.getElementById('excelStatus');
+  const file = fileInput.files[0];
+  if (!file) { toast('Choose a file first', true); return; }
+
+  statusEl.textContent = 'Reading file…';
+  try {
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+
+    if (rows.length === 0) {
+      statusEl.textContent = 'No rows found in file.';
+      return;
+    }
+
+    // normalize column names per row
+    const normalizedRows = rows.map(row => {
+      const out = {};
+      Object.keys(row).forEach(k => out[normalizeKey(k)] = row[k]);
+      return out;
+    });
+
+    // validate first row has required columns
+    const sample = normalizedRows[0];
+    const hasName = 'name' in sample || 'product' in sample || 'product_name' in sample;
+    const hasPrice = 'price' in sample;
+    if (!hasName || !hasPrice) {
+      statusEl.textContent = 'File must have "name" and "price" columns. Found: ' + Object.keys(sample).join(', ');
+      toast('Missing required columns', true);
+      return;
+    }
+
+    let success = 0, failed = 0;
+    for (let i = 0; i < normalizedRows.length; i++) {
+      const r = normalizedRows[i];
+      const name = r.name || r.product || r.product_name;
+      const price = parseFloat(r.price);
+      const stock = parseInt(r.stock_qty || r.stock || r.quantity || 0);
+      if (!name || isNaN(price)) { failed++; continue; }
+
+      statusEl.textContent = `Uploading ${i+1} of ${normalizedRows.length}…`;
+      try {
+        await api('/products', {method:'POST', body: JSON.stringify({name: String(name), price, stock_qty: stock})});
+        success++;
+      } catch(e) {
+        failed++;
+      }
+    }
+
+    statusEl.textContent = `Done — ${success} added${failed ? ', ' + failed + ' failed' : ''}.`;
+    toast(`Imported ${success} products`);
+    fileInput.value = '';
+    loadInventory();
+  } catch(e) {
+    statusEl.textContent = 'Could not read file — make sure it\'s a valid Excel/CSV file.';
+    toast('Upload failed', true);
+  }
+});
+
+// ---------- Billing ----------
+function addBillLine(){
+  billLines.push({product_id:'', quantity:1});
+  renderBillLines();
+}
+
+function renderBillLines(){
+  const wrap = document.getElementById('billItemsWrap');
+  if (products.length === 0) {
+    wrap.innerHTML = `<div class="empty">Add a product in the Inventory tab first.</div>`;
+    return;
+  }
+  if (billLines.length === 0) addBillLine();
+
+  wrap.innerHTML = billLines.map((line, idx) => {
+    const product = products.find(p => p.id == line.product_id);
+    const lineTotal = product ? product.price * line.quantity : 0;
+    const searchVal = line._searchText !== undefined ? line._searchText : (product ? product.name : '');
+    return `<div class="bill-row">
+      <div class="search-select">
+        <input type="text" placeholder="Search product…" value="${escapeHtml(searchVal)}"
+          oninput="onSearchInput(${idx}, this.value)"
+          onfocus="onSearchFocus(${idx})"
+          onblur="onSearchBlur(${idx})"
+          autocomplete="off">
+        <div class="dropdown" id="dropdown-${idx}"></div>
+      </div>
+      <input type="number" min="1" value="${line.quantity}" onchange="updateLine(${idx}, 'quantity', this.value)">
+      <div class="line-total">${money(lineTotal)}</div>
+      <button class="remove" onclick="removeLine(${idx})">&times;</button>
+    </div>`;
+  }).join('');
+  updateTotal();
+}
+
+function renderDropdown(idx, query){
+  const dropdown = document.getElementById('dropdown-'+idx);
+  if (!dropdown) return;
+  const q = (query || '').trim().toLowerCase();
+  const matches = q
+    ? products.filter(p => p.name.toLowerCase().includes(q))
+    : products;
+
+  if (matches.length === 0) {
+    dropdown.innerHTML = `<div class="no-match">No products match "${escapeHtml(query)}"</div>`;
+  } else {
+    dropdown.innerHTML = matches.slice(0, 30).map(p => `
+      <div class="option" onmousedown="selectProduct(${idx}, ${p.id})">
+        <span class="oname">${escapeHtml(p.name)}</span>
+        <span class="oprice">${money(p.price)} · stock ${p.stock_qty}</span>
+      </div>
+    `).join('');
+  }
+  dropdown.classList.add('open');
+}
+
+function onSearchInput(idx, value){
+  billLines[idx]._searchText = value;
+  billLines[idx].product_id = ''; // clear selection until a real option is picked
+  renderDropdown(idx, value);
+  updateTotal();
+}
+function onSearchFocus(idx){
+  renderDropdown(idx, billLines[idx]._searchText || '');
+}
+function onSearchBlur(idx){
+  setTimeout(() => {
+    const dropdown = document.getElementById('dropdown-'+idx);
+    if (dropdown) dropdown.classList.remove('open');
+  }, 150);
+}
+function selectProduct(idx, productId){
+  const product = products.find(p => p.id === productId);
+  billLines[idx].product_id = productId;
+  billLines[idx]._searchText = product ? product.name : '';
+  const dropdown = document.getElementById('dropdown-'+idx);
+  if (dropdown) dropdown.classList.remove('open');
+  renderBillLines();
+}
+
+function updateLine(idx, key, value){
+  billLines[idx][key] = key === 'quantity' ? parseInt(value||1) : value;
+  renderBillLines();
+}
+function removeLine(idx){
+  billLines.splice(idx,1);
+  renderBillLines();
+}
+function updateTotal(){
+  let total = 0;
+  billLines.forEach(line => {
+    const product = products.find(p => p.id == line.product_id);
+    if (product) total += product.price * line.quantity;
+  });
+  document.getElementById('billTotal').textContent = money(total);
+}
+
+document.getElementById('addLineBtn').addEventListener('click', addBillLine);
+
+document.getElementById('createBillBtn').addEventListener('click', async () => {
+  const items = billLines.filter(l => l.product_id).map(l => ({product_id: parseInt(l.product_id), quantity: l.quantity}));
+  if (items.length === 0) { toast('Add at least one item to the bill', true); return; }
+
+  const custName = document.getElementById('c-name').value.trim();
+  const custPhone = document.getElementById('c-phone').value.trim();
+
+  const btn = document.getElementById('createBillBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const bill = await api('/bills', {method:'POST', body: JSON.stringify({items})});
+    lastCreatedBill = {...bill, customer_name: custName || 'Walk-in customer', customer_phone: custPhone};
+    toast('Bill created successfully');
+    document.getElementById('successBillId').textContent = bill.id;
+    document.getElementById('billSuccessBox').style.display = 'block';
+    billLines = [];
+    await loadInventory();
+    renderBillLines();
+  } catch(e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create bill';
+  }
+});
+
+function generateInvoicePDF(bill){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const navy = [11,31,58];
+  const blue = [30,144,255];
+  const muted = [91,107,130];
+
+  // Header
+  doc.setFillColor(...navy);
+  doc.rect(0, 0, 595, 90, 'F');
+  doc.setFillColor(...blue);
+  doc.roundedRect(40, 24, 42, 42, 8, 8, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(20);
+  doc.text('S', 61, 52, {align:'center'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(20);
+  doc.text('ShreeLix', 96, 46);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.setTextColor(200,215,235);
+  doc.text('Building Smart Solutions', 96, 62);
+
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('INVOICE', 555, 46, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.setTextColor(200,215,235);
+  doc.text('#'+String(bill.id).padStart(5,'0'), 555, 62, {align:'right'});
+
+  // Meta
+  let y = 130;
+  doc.setTextColor(...navy);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('Bill To', 40, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.setTextColor(...muted);
+  doc.text(bill.customer_name || 'Walk-in customer', 40, y+18);
+  if (bill.customer_phone) doc.text(bill.customer_phone, 40, y+34);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.setTextColor(...navy);
+  doc.text('Date', 420, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.setTextColor(...muted);
+  const dateStr = new Date(bill.created_at).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'});
+  doc.text(dateStr, 420, y+18);
+
+  // Table header
+  y += 70;
+  doc.setFillColor(248,250,252);
+  doc.rect(40, y-16, 515, 26, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.setTextColor(...navy);
+  doc.text('ITEM', 50, y);
+  doc.text('QTY', 350, y, {align:'right'});
+  doc.text('UNIT PRICE', 460, y, {align:'right'});
+  doc.text('AMOUNT', 545, y, {align:'right'});
+
+  y += 24;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+  doc.setTextColor(...muted);
+  bill.items.forEach(item => {
+    doc.setTextColor(30,41,59);
+    doc.text(item.product_name, 50, y);
+    doc.setTextColor(...muted);
+    doc.text(String(item.quantity), 350, y, {align:'right'});
+    doc.text('Rs. '+item.unit_price.toLocaleString('en-IN'), 460, y, {align:'right'});
+    doc.text('Rs. '+item.line_total.toLocaleString('en-IN'), 545, y, {align:'right'});
+    y += 24;
+    doc.setDrawColor(227,232,240);
+    doc.line(40, y-16, 555, y-16);
+  });
+
+  // Total
+  y += 20;
+  doc.setDrawColor(...navy);
+  doc.setLineWidth(1.5);
+  doc.line(350, y-14, 555, y-14);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.setTextColor(...navy);
+  doc.text('Total', 460, y+6, {align:'right'});
+  doc.text('Rs. '+bill.total_amount.toLocaleString('en-IN'), 545, y+6, {align:'right'});
+
+  // Footer
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.setTextColor(...muted);
+  doc.text('Generated via the ShreeLix live demo — support.shreelix@gmail.com', 40, 780);
+
+  doc.save('ShreeLix-Invoice-' + bill.id + '.pdf');
+}
+
+document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+  if (lastCreatedBill) generateInvoicePDF(lastCreatedBill);
+});
+
+function downloadHistoryPdf(bill){
+  generateInvoicePDF({...bill, customer_name: 'Walk-in customer', customer_phone: ''});
+}
+
+// ---------- History ----------
+async function loadHistory(){
+  const wrap = document.getElementById('historyWrap');
+  wrap.innerHTML = `<div class="loading-row">Loading bills…</div>`;
+  try {
+    const bills = await api('/bills');
+    if (bills.length === 0) {
+      wrap.innerHTML = `<div class="empty"><div class="big">🧾</div>No bills yet — create one in the "New Bill" tab.</div>`;
+      return;
+    }
+    let rows = bills.map(b => {
+      const itemsSummary = b.items.map(i => `${i.quantity}× ${escapeHtml(i.product_name)}`).join(', ');
+      const date = new Date(b.created_at).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'});
+      return `<tr>
+        <td>#${b.id}</td>
+        <td>${itemsSummary}</td>
+        <td class="num">${money(b.total_amount)}</td>
+        <td style="color:var(--muted);font-size:13px;">${date}</td>
+        <td><button class="btn small secondary" onclick='downloadHistoryPdf(${JSON.stringify(b).replace(/'/g,"&#39;")})'>PDF</button></td>
+      </tr>`;
+    }).join('');
+    wrap.innerHTML = `<table>
+      <thead><tr><th>Bill</th><th>Items</th><th class="num">Total</th><th>Date</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty">Couldn't load bill history.</div>`;
+  }
+}
+
+// ---------- Init ----------
+checkStatus();
+loadInventory();
+</script>
+
+</body>
+</html>
