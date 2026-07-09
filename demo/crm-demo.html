@@ -59,7 +59,11 @@
   }
   input:focus, select:focus, textarea:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue);}
 
-  .board{display:flex;gap:16px;overflow-x:auto;padding:24px 0 60px;}
+  .board{display:flex;gap:16px;overflow-x:auto;padding:24px 0 20px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+  .board::-webkit-scrollbar{height:8px;}
+  .board::-webkit-scrollbar-track{background:transparent;}
+  .board::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+  .board::-webkit-scrollbar-thumb:hover{background:#c8d0dc;}
   .column{flex:0 0 260px;background:#EEF2F7;border-radius:14px;padding:14px;min-height:200px;}
   .column-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px;}
   .column-head .name{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.03em;}
@@ -155,19 +159,19 @@
 
   <div class="board" id="board"></div>
 
-<div class="wrap" id="statsWrap" style="display:none;padding-bottom:20px;margin-top:-20px;">
+<div class="wrap" id="statsWrap" style="display:none;padding-top:20px;padding-bottom:20px;">
   <div style="display:flex;gap:20px;flex-wrap:wrap;">
-    <div style="background:#fff;border:1px solid var--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
-      <div style="font-size:12px;color:var--muted);margin-bottom:4px;">Total leads</div>
-      <div id="statTotalLeads" style="font-size:22px;font-weight:700;color:var--navy);font-family:'Poppins',sans-serif;"></div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Total leads</div>
+      <div id="statTotalLeads" style="font-size:22px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;"></div>
     </div>
-    <div style="background:#fff;border:1px solid var--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
-      <div style="font-size:12px;color:var--muted);margin-bottom:4px;">Pipeline value</div>
-      <div id="statPipelineValue" style="font-size:22px;font-weight:700;color:var--navy);font-family:'Poppins',sans-serif;"></div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Pipeline value</div>
+      <div id="statPipelineValue" style="font-size:22px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;"></div>
     </div>
-    <div style="background:#fff;border:1px solid var--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
-      <div style="font-size:12px;color:var--muted);margin-bottom:4px;">Won (repeat customers)</div>
-      <div id="statWon" style="font-size:22px;font-weight:700;color:var--green);font-family:'Poppins',sans-serif;"></div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Won (repeat customers)</div>
+      <div id="statWon" style="font-size:22px;font-weight:700;color:var(--green);font-family:'Poppins',sans-serif;"></div>
     </div>
   </div>
 </div>
