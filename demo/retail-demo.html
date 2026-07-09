@@ -192,6 +192,9 @@
         <label for="c-phone">Phone</label>
         <input id="c-phone" placeholder="Optional">
         <p style="font-size:12.5px;color:var(--muted);margin-top:10px;">Leave blank for a quick walk-in sale — no customer record required.</p>
+        <div style="margin-top:12px;padding:10px 12px;background:var(--green-bg);border-radius:8px;font-size:12px;color:var(--green);">
+          ⚡ If you enter a name here, this customer is automatically synced to the <a href="crm-demo.html" style="text-decoration:underline;">CRM demo</a> as a lead — no manual data entry needed.
+        </div>
       </div>
       <div class="card">
         <h3>Bill items</h3>
@@ -523,7 +526,7 @@ document.getElementById('createBillBtn').addEventListener('click', async () => {
   const btn = document.getElementById('createBillBtn');
   btn.disabled = true; btn.textContent = 'Creating…';
   try {
-    const bill = await api('/bills', {method:'POST', body: JSON.stringify({items})});
+    const bill = await api('/bills', {method:'POST', body: JSON.stringify({items, customer_name: custName || null, customer_phone: custPhone || null})});
     lastCreatedBill = {...bill, customer_name: custName || 'Walk-in customer', customer_phone: custPhone};
     toast('Bill created successfully');
     document.getElementById('successBillId').textContent = bill.id;
