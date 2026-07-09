@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Demo — Smart Automation | ShreeLix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1F3A; --navy-soft:#132A4D; --blue:#1E90FF; --blue-deep:#0B5FCC;
+    --amber:#F59E0B; --bg:#F6F8FB; --card:#FFFFFF; --text:#1E293B;
+    --muted:#64748B; --border:#E3E8F0; --green:#0E7A45; --green-bg:#E7F8F0;
+    --red:#C0392B; --red-bg:#FDECEA; --indigo:#6366F1; --indigo-bg:#EEF0FE;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--navy);}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px;}
+  button{font-family:'Inter',sans-serif;}
+
+  nav{background:var(--navy);padding:16px 0;}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-weight:700;font-size:18px;color:#fff;}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;border:1px solid rgba(255,255,255,0.15);}
+  .back-link{font-size:13.5px;color:rgba(255,255,255,0.75);}
+  .back-link:hover{color:#fff;}
+
+  .banner{background:#FFF7E6;border-bottom:1px solid #F5D98B;padding:10px 0;}
+  .banner .wrap{display:flex;align-items:center;gap:10px;font-size:13px;color:#8A6416;}
+  .banner b{color:#6B4A0C;}
+
+  .honesty{background:#EEF0FE;border-bottom:1px solid #C7CCFB;padding:10px 0;}
+  .honesty .wrap{display:flex;align-items:center;gap:10px;font-size:13px;color:#3730A3;}
+  .honesty b{color:#2B2680;}
+
+  header.page{padding:32px 0 8px;}
+  header.page h1{font-size:26px;font-weight:700;}
+  header.page p{color:var(--muted);margin-top:6px;font-size:14.5px;max-width:600px;}
+  .status-row{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--muted);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#ccc;}
+  .dot.live{background:var(--green);}
+  .dot.down{background:var(--red);}
+
+  .section-block{padding:24px 0;}
+  .section-block h2{font-size:17px;font-weight:700;margin-bottom:4px;}
+  .section-block .sub{font-size:13px;color:var(--muted);margin-bottom:16px;}
+
+  .alert-card{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;
+    display:flex;align-items:center;gap:14px;margin-bottom:10px;
+  }
+  .alert-card .aicon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;}
+  .alert-card.warn .aicon{background:#FFF3E0;color:#B8720C;}
+  .alert-card.danger .aicon{background:var(--red-bg);color:var(--red);}
+  .alert-card.info .aicon{background:var(--indigo-bg);color:var(--indigo);}
+  .alert-card .abody{flex:1;min-width:0;}
+  .alert-card .atitle{font-weight:600;font-size:14px;color:var(--navy);}
+  .alert-card .adesc{font-size:13px;color:var(--muted);margin-top:2px;}
+  .alert-card .aval{font-weight:700;font-size:13.5px;color:var(--navy);white-space:nowrap;}
+
+  .empty{padding:30px 20px;text-align:center;color:var(--muted);font-size:13.5px;background:var(--card);border:1px solid var(--border);border-radius:12px;}
+  .empty .big{font-size:26px;margin-bottom:8px;}
+
+  .insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media(max-width:800px){.insight-grid{grid-template-columns:1fr;}}
+  .insight-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;}
+  .insight-card .ilabel{font-size:12px;color:var(--muted);margin-bottom:8px;}
+  .insight-card .ivalue{font-size:26px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;}
+  .insight-card .itrend{font-size:12.5px;margin-top:6px;font-weight:600;}
+  .itrend.up{color:var(--green);}
+  .itrend.down{color:var(--red);}
+  .itrend.flat{color:var(--muted);}
+
+  .how-it-works{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:8px;}
+  .how-it-works h3{font-size:14px;margin-bottom:10px;}
+  .how-it-works ol{margin-left:18px;color:var(--muted);font-size:13px;line-height:1.8;}
+
+  @media(max-width:640px){
+    header.page{padding:24px 0 8px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="mark">S</span> ShreeLix</div>
+    <a class="back-link" href="../">&larr; Back to website</a>
+  </div>
+</nav>
+
+<div class="banner">
+  <div class="wrap">
+    <span>&#9432;</span>
+    <span><b>Shared live demo</b> — insights below are computed from real Billing and CRM data, shared across everyone trying the demo.</span>
+  </div>
+</div>
+
+<div class="honesty">
+  <div class="wrap">
+    <span>&#9432;</span>
+    <span><b>How this works, honestly:</b> these are rule-based automations analyzing real data patterns — not a generative AI chatbot. This is exactly the kind of practical automation ShreeLix builds before layering in generative AI where it adds real value.</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="page">
+    <h1>Smart automation & insights</h1>
+    <p>Instead of a person manually checking stock levels or remembering to follow up with leads, these rules run automatically against your live data.</p>
+    <div class="status-row">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Checking connection to live API…</span>
+    </div>
+  </header>
+
+  <div class="section-block">
+    <h2>📦 Inventory reorder alerts</h2>
+    <div class="sub">Calculated from actual sales velocity — flags products likely to run out soon, with a suggested reorder quantity.</div>
+    <div id="reorderWrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="section-block">
+    <h2>🎯 Lead follow-up reminders</h2>
+    <div class="sub">Flags active leads with no logged activity in the last 3 days, so nobody falls through the cracks.</div>
+    <div id="followupWrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="section-block">
+    <h2>📈 Sales insights</h2>
+    <div class="sub">Automatically computed trends from your billing history.</div>
+    <div class="insight-grid" id="insightGrid"></div>
+  </div>
+
+  <div class="section-block">
+    <div class="how-it-works">
+      <h3>How the reorder calculation works</h3>
+      <ol>
+        <li>Look at all bills for a product and count units sold per day it was actually sold</li>
+        <li>Calculate the average daily sales rate from that history</li>
+        <li>Divide current stock by that rate to estimate days until stockout</li>
+        <li>Flag anything under 7 days remaining, and suggest a 14-day supply as the reorder quantity</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://retail-billing-system-hmq4.onrender.com";
+
+function toast(){}
+function money(n){ return '₹' + Number(n||0).toLocaleString('en-IN'); }
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+async function api(path) {
+  const res = await fetch(API + path, {headers:{'Content-Type':'application/json'}});
+  if (!res.ok) throw new Error('Request failed');
+  return res.json();
+}
+
+async function checkStatus(){
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  try {
+    await api('/health');
+    dot.className = 'dot live';
+    text.textContent = 'Connected to live API — running against real data';
+  } catch(e) {
+    dot.className = 'dot down';
+    text.textContent = 'API is waking up (free-tier hosting sleeps when idle)…';
+    setTimeout(checkStatus, 4000);
+  }
+}
+
+function daysBetween(d1, d2){
+  return Math.max(1, Math.round((d2 - d1) / (1000*60*60*24)));
+}
+
+async function runReorderAnalysis(){
+  const wrap = document.getElementById('reorderWrap');
+  try {
+    const [products, bills] = await Promise.all([api('/products'), api('/bills')]);
+
+    const salesByProduct = {};
+    bills.forEach(b => {
+      const billDate = new Date(b.created_at).toDateString();
+      b.items.forEach(item => {
+        if (!salesByProduct[item.product_name]) salesByProduct[item.product_name] = {qty:0, days:new Set(), firstSale:null};
+        salesByProduct[item.product_name].qty += item.quantity;
+        salesByProduct[item.product_name].days.add(billDate);
+        const saleDate = new Date(b.created_at);
+        if (!salesByProduct[item.product_name].firstSale || saleDate < salesByProduct[item.product_name].firstSale) {
+          salesByProduct[item.product_name].firstSale = saleDate;
+        }
+      });
+    });
+
+    const alerts = [];
+    products.forEach(p => {
+      const sales = salesByProduct[p.name];
+      if (!sales) return;
+      const spanDays = daysBetween(sales.firstSale, new Date());
+      const avgDailySales = sales.qty / spanDays;
+      if (avgDailySales <= 0) return;
+      const daysLeft = p.stock_qty / avgDailySales;
+      if (daysLeft < 7) {
+        alerts.push({
+          product: p.name,
+          daysLeft: Math.round(daysLeft*10)/10,
+          stock: p.stock_qty,
+          suggestedReorder: Math.ceil(avgDailySales * 14),
+          severity: daysLeft < 2 ? 'danger' : 'warn',
+        });
+      }
+    });
+    alerts.sort((a,b) => a.daysLeft - b.daysLeft);
+
+    if (alerts.length === 0) {
+      wrap.innerHTML = `<div class="empty"><div class="big">✓</div>No reorder alerts right now — stock levels look healthy relative to sales velocity.</div>`;
+      return;
+    }
+    wrap.innerHTML = alerts.map(a => `
+      <div class="alert-card ${a.severity}">
+        <div class="aicon">${a.severity === 'danger' ? '⚠' : '⏱'}</div>
+        <div class="abody">
+          <div class="atitle">${escapeHtml(a.product)}</div>
+          <div class="adesc">~${a.daysLeft} days of stock left at current sales pace (${a.stock} units in hand). Suggested reorder: ${a.suggestedReorder} units.</div>
+        </div>
+        <div class="aval">${a.stock} left</div>
+      </div>
+    `).join('');
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty">Couldn't run analysis — the API may still be waking up.</div>`;
+  }
+}
+
+async function runFollowupAnalysis(){
+  const wrap = document.getElementById('followupWrap');
+  try {
+    const leads = await api('/leads');
+    const active = leads.filter(l => !['won','lost'].includes(l.stage));
+    const now = new Date();
+
+    const flagged = active.map(l => {
+      const lastActivity = l.activities && l.activities.length > 0
+        ? new Date(l.activities[l.activities.length-1].created_at)
+        : new Date(l.created_at);
+      const daysSince = Math.floor((now - lastActivity) / (1000*60*60*24));
+      return {...l, daysSince};
+    }).filter(l => l.daysSince >= 3).sort((a,b) => b.daysSince - a.daysSince);
+
+    if (flagged.length === 0) {
+      wrap.innerHTML = `<div class="empty"><div class="big">✓</div>All active leads have recent activity — nothing needs follow-up right now.</div>`;
+      return;
+    }
+    wrap.innerHTML = flagged.map(l => `
+      <div class="alert-card info">
+        <div class="aicon">🎯</div>
+        <div class="abody">
+          <div class="atitle">${escapeHtml(l.name)}${l.company ? ' · ' + escapeHtml(l.company) : ''}</div>
+          <div class="adesc">No activity logged in ${l.daysSince} days — currently in "${escapeHtml(l.stage)}" stage.</div>
+        </div>
+        <a href="crm-demo.html" class="aval" style="color:var(--blue-deep);">Follow up →</a>
+      </div>
+    `).join('');
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty">Couldn't run analysis — the API may still be waking up.</div>`;
+  }
+}
+
+async function runSalesInsights(){
+  const grid = document.getElementById('insightGrid');
+  try {
+    const bills = await api('/bills');
+    const now = new Date();
+    const weekAgo = new Date(now - 7*24*60*60*1000);
+    const twoWeeksAgo = new Date(now - 14*24*60*60*1000);
+
+    const thisWeek = bills.filter(b => new Date(b.created_at) >= weekAgo);
+    const lastWeek = bills.filter(b => new Date(b.created_at) >= twoWeeksAgo && new Date(b.created_at) < weekAgo);
+
+    const thisWeekRevenue = thisWeek.reduce((s,b) => s + b.total_amount, 0);
+    const lastWeekRevenue = lastWeek.reduce((s,b) => s + b.total_amount, 0);
+    const change = lastWeekRevenue > 0 ? ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue * 100) : (thisWeekRevenue > 0 ? 100 : 0);
+
+    const dayCounts = {};
+    bills.forEach(b => {
+      const day = new Date(b.created_at).toLocaleDateString('en-IN', {weekday:'long'});
+      dayCounts[day] = (dayCounts[day]||0) + b.total_amount;
+    });
+    const bestDay = Object.entries(dayCounts).sort((a,b) => b[1]-a[1])[0];
+
+    const avgBillValue = bills.length > 0 ? bills.reduce((s,b) => s+b.total_amount, 0) / bills.length : 0;
+
+    grid.innerHTML = `
+      <div class="insight-card">
+        <div class="ilabel">This week's revenue</div>
+        <div class="ivalue">${money(thisWeekRevenue)}</div>
+        <div class="itrend ${change > 0 ? 'up' : change < 0 ? 'down' : 'flat'}">${change === 0 ? 'No change vs last week' : (change > 0 ? '↑' : '↓') + ' ' + Math.abs(Math.round(change)) + '% vs last week'}</div>
+      </div>
+      <div class="insight-card">
+        <div class="ilabel">Best selling day</div>
+        <div class="ivalue" style="font-size:20px;">${bestDay ? bestDay[0] : 'Not enough data'}</div>
+        <div class="itrend flat">${bestDay ? money(bestDay[1]) + ' total revenue' : ''}</div>
+      </div>
+      <div class="insight-card">
+        <div class="ilabel">Average bill value</div>
+        <div class="ivalue">${money(Math.round(avgBillValue))}</div>
+        <div class="itrend flat">Across ${bills.length} bill${bills.length !== 1 ? 's' : ''} total</div>
+      </div>
+    `;
+  } catch(e) {
+    grid.innerHTML = `<div class="empty">Couldn't load insights.</div>`;
+  }
+}
+
+checkStatus();
+runReorderAnalysis();
+runFollowupAnalysis();
+runSalesInsights();
+</script>
+
+</body>
+</html>
