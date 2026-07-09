@@ -208,6 +208,10 @@
         <div id="billSuccessBox" style="display:none;margin-top:16px;padding:16px;background:var(--green-bg);border-radius:10px;">
           <div style="font-weight:600;color:var(--green);font-size:14px;margin-bottom:10px;">✓ Bill #<span id="successBillId"></span> created</div>
           <button class="btn secondary" id="downloadPdfBtn" style="margin-top:0;">Download PDF invoice</button>
+          <div id="crmLinkBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #B8E6CC;">
+            <div style="font-size:12.5px;color:var(--green);margin-bottom:6px;">⚡ This customer was automatically added to the CRM</div>
+            <a href="crm-demo.html" style="font-size:13px;font-weight:600;color:var(--blue-deep);text-decoration:underline;">View this lead in the CRM demo →</a>
+          </div>
         </div>
       </div>
     </div>
@@ -531,6 +535,7 @@ document.getElementById('createBillBtn').addEventListener('click', async () => {
     toast('Bill created successfully');
     document.getElementById('successBillId').textContent = bill.id;
     document.getElementById('billSuccessBox').style.display = 'block';
+    document.getElementById('crmLinkBox').style.display = custName ? 'block' : 'none';
     billLines = [];
     await loadInventory();
     renderBillLines();
