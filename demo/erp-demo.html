@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Demo — ERP Dashboard | ShreeLix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1F3A; --navy-soft:#132A4D; --blue:#1E90FF; --blue-deep:#0B5FCC;
+    --amber:#F59E0B; --bg:#F6F8FB; --card:#FFFFFF; --text:#1E293B;
+    --muted:#64748B; --border:#E3E8F0; --green:#0E7A45; --green-bg:#E7F8F0;
+    --red:#C0392B; --red-bg:#FDECEA; --indigo:#6366F1; --indigo-bg:#EEF0FE;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--navy);}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 24px;}
+  button{font-family:'Inter',sans-serif;}
+
+  nav{background:var(--navy);padding:16px 0;}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-weight:700;font-size:18px;color:#fff;}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;border:1px solid rgba(255,255,255,0.15);}
+  .back-link{font-size:13.5px;color:rgba(255,255,255,0.75);}
+  .back-link:hover{color:#fff;}
+
+  .banner{background:#FFF7E6;border-bottom:1px solid #F5D98B;padding:10px 0;}
+  .banner .wrap{display:flex;align-items:center;gap:10px;font-size:13px;color:#8A6416;}
+  .banner b{color:#6B4A0C;}
+
+  .dash-header{background:linear-gradient(135deg,var(--navy) 0%,var(--blue-deep) 100%);padding:32px 0;}
+  .dash-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:8px;}
+  .dash-top h1{color:#fff;font-size:24px;font-weight:700;}
+  .dash-top p{color:rgba(255,255,255,0.7);font-size:13.5px;margin-top:4px;max-width:560px;}
+  .status-row{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;color:rgba(255,255,255,0.65);}
+  .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.4);}
+  .dot.live{background:#4ADE80;}
+  .dot.down{background:#F87171;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;
+    font-weight:600;font-size:13.5px;border:none;cursor:pointer;white-space:nowrap;
+  }
+  .btn:hover{background:var(--navy-soft);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn.light{background:#fff;color:var(--navy);}
+  .btn.light:hover{background:#F1F5F9;}
+  .btn.secondary{background:transparent;border:1.5px solid var(--border);color:var(--navy);}
+  .btn.small{padding:6px 12px;font-size:12px;}
+  .btn.danger{background:var(--red);}
+  .btn.full{width:100%;margin-top:14px;}
+
+  label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;margin-top:14px;}
+  label:first-child{margin-top:0;}
+  input, select,textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+    font-family:'Inter',sans-serif;font-size:14px;background:#fff;color:var(--text);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue);}
+
+  .tabs{display:flex;gap:6px;margin:20px 0 20px;border-bottom:1px solid var(--border);overflow-x:auto;}
+  .tab{padding:11px 16px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;}
+  .tab.active{color:var(--navy);border-bottom-color:var(--blue);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  .stat-card{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px 18px;}
+  .stat-card .slabel{font-size:11.5px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
+  .stat-card .svalue{font-size:22px;font-weight:700;color:#fff;font-family:'Poppins',sans-serif;}
+
+  @media(max-width:700px){.stat-grid{grid-template-columns:1fr 1fr;} .dash-top{flex-direction:column;}}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;}
+  .card h3{font-size:15.5px;margin-bottom:14px;}
+  .grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  @media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr;}}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px;}
+  .row:last-child{border-bottom:none;}
+  .row .r-name{font-weight:600;color:var(--navy);}
+  .row .r-sub{font-size:12px;color:var(--muted);}
+  .row .r-val{font-weight:600;color:var(--navy);}
+  .badge{display:inline-flex;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;}
+  .badge.ok{background:var(--green-bg);color:var(--green);}
+  .badge.warn{background:#FFF3E0;color:#B8720C;}
+  .badge.bad{background:var(--red-bg);color:var(--red);}
+  .empty{padding:30px 12px;text-align:center;color:var(--muted);font-size:13px;}
+  .progress-bar{height:7px;background:var(--bg);border-radius:4px;overflow:hidden;margin-top:6px;}
+  .progress-fill{height:100%;border-radius:4px;}
+
+  .avatar-sm{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;font-family:'Poppins',sans-serif;flex-shrink:0;}
+
+  .attend-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .attend-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;}
+  .attend-card .ai{flex:1;min-width:0;}
+  .attend-card .aname{font-weight:600;font-size:13px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .attend-card .arole{font-size:11px;color:var(--muted);}
+  .attend-btns{display:flex;gap:4px;}
+  .attend-btns button{font-size:10px;padding:4px 8px;border-radius:5px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;}
+  .attend-btns button.active-present{background:var(--green);color:#fff;border-color:var(--green);}
+  .attend-btns button.active-absent{background:var(--red);color:#fff;border-color:var(--red);}
+  .attend-btns button.active-leave{background:var(--amber);color:#fff;border-color:var(--amber);}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);
+    background:var(--navy);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:500;
+    transition:transform .25s ease;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast.error{background:var(--red);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="mark">S</span> ShreeLix</div>
+    <a class="back-link" href="../">&larr; Back to website</a>
+  </div>
+</nav>
+
+<div class="banner">
+  <div class="wrap">
+    <span>&#9432;</span>
+    <span><b>Shared live demo</b> — combines real data from Billing, CRM, and this HR module into one view.</span>
+  </div>
+</div>
+
+<div class="dash-header">
+  <div class="wrap">
+    <div class="dash-top">
+      <div>
+        <h1>Enterprise dashboard</h1>
+        <p>One view across Sales, Inventory, CRM, and HR — the kind of unified system ShreeLix builds for growing businesses.</p>
+        <div class="status-row">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">Checking connection to live API…</span>
+        </div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="slabel">Total revenue</div>
+        <div class="svalue" id="statRevenue">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="slabel">Pipeline value</div>
+        <div class="svalue" id="statPipeline">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="slabel">Team size</div>
+        <div class="svalue" id="statTeam">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="slabel">Present today</div>
+        <div class="svalue" id="statPresent">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" data-tab="overview">Overview</div>
+    <div class="tab" data-tab="employees">Employees</div>
+    <div class="tab" data-tab="attendance">Attendance</div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="panel-overview">
+    <div class="grid3" style="margin-bottom:16px;">
+      <div class="card">
+        <h3>Sales</h3>
+        <div class="row"><span class="r-name">Total revenue</span><span class="r-val" id="ov-revenue">₹0</span></div>
+        <div class="row"><span class="r-name">Bills created</span><span class="r-val" id="ov-bills">0</span></div>
+        <a href="retail-demo.html" style="display:block;margin-top:12px;font-size:12.5px;color:var(--blue-deep);">Open Billing demo →</a>
+      </div>
+      <div class="card">
+        <h3>Inventory</h3>
+        <div class="row"><span class="r-name">Products tracked</span><span class="r-val" id="ov-products">0</span></div>
+        <div class="row"><span class="r-name">Low / out of stock</span><span class="r-val" id="ov-lowstock">0</span></div>
+        <a href="retail-demo.html" style="display:block;margin-top:12px;font-size:12.5px;color:var(--blue-deep);">Open Inventory →</a>
+      </div>
+      <div class="card">
+        <h3>CRM pipeline</h3>
+        <div class="row"><span class="r-name">Active leads</span><span class="r-val" id="ov-leads">0</span></div>
+        <div class="row"><span class="r-name">Pipeline value</span><span class="r-val" id="ov-pipeline">₹0</span></div>
+        <a href="crm-demo.html" style="display:block;margin-top:12px;font-size:12.5px;color:var(--blue-deep);">Open CRM demo →</a>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Recent sales</h3>
+        <div id="ov-recentBills"><div class="empty">Loading…</div></div>
+      </div>
+      <div class="card">
+        <h3>Team snapshot</h3>
+        <div id="ov-teamSnapshot"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMPLOYEES -->
+  <div class="panel" id="panel-employees">
+    <div class="grid2">
+      <div class="card">
+        <h3>Add employee</h3>
+        <label>Name *</label>
+        <input id="emp-name" placeholder="Full name">
+        <label>Role</label>
+        <input id="emp-role" placeholder="e.g. Sales Associate">
+        <label>Department</label>
+        <input id="emp-dept" placeholder="e.g. Retail, Operations">
+        <label>Phone</label>
+        <input id="emp-phone" placeholder="Optional">
+        <label>Monthly salary (₹)</label>
+        <input id="emp-salary" type="number" min="0" placeholder="0">
+        <button class="btn full" id="addEmployeeBtn">Add employee</button>
+      </div>
+      <div class="card">
+        <h3>Team directory</h3>
+        <div id="employeeListWrap"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div class="panel" id="panel-attendance">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <h3 style="margin-bottom:0;">Today's attendance — <span id="todayDateLabel"></span></h3>
+      </div>
+      <div class="attend-grid" id="attendanceWrap"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://retail-billing-system-hmq4.onrender.com";
+let products = [], bills = [], leads = [], employees = [], attendanceToday = [];
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+const TODAY = todayStr();
+
+function toast(msg, isError=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(()=> t.className = 'toast', 2800);
+}
+function money(n){ return '₹' + Number(n||0).toLocaleString('en-IN'); }
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+function initials(name){
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]||'')[0] + (parts[1]?parts[1][0]:'')).toUpperCase();
+}
+function avatarColor(name){
+  const palette = [['#EAF2FF','#0B5FCC'],['#EEF0FE','#4F46E5'],['#E7F8F0','#0E7A45'],['#FFF3E0','#B8720C'],['#FDECEA','#B33636'],['#F3E8FF','#7E22CE']];
+  let hash = 0;
+  for (let i=0;i<(name||'').length;i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  const [bg, fg] = palette[Math.abs(hash) % palette.length];
+  return {bg, fg};
+}
+
+async function api(path, opts={}) {
+  const res = await fetch(API + path, {headers:{'Content-Type':'application/json'}, ...opts});
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({detail:'Request failed'}));
+    throw new Error(err.detail || 'Request failed');
+  }
+  return res.json();
+}
+
+async function checkStatus(){
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  try {
+    await api('/health');
+    dot.className = 'dot live';
+    text.textContent = 'Connected to live API';
+  } catch(e) {
+    dot.className = 'dot down';
+    text.textContent = 'API is waking up (free-tier hosting sleeps when idle)…';
+    setTimeout(checkStatus, 4000);
+  }
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'employees') renderEmployees();
+    if (tab.dataset.tab === 'attendance') renderAttendance();
+  });
+});
+
+async function loadAll(){
+  try {
+    const [p, b, l, e, a] = await Promise.all([
+      api('/products'), api('/bills'), api('/leads'), api('/employees'), api('/attendance?date='+TODAY)
+    ]);
+    products = p; bills = b; leads = l; employees = e; attendanceToday = a;
+    renderOverview();
+  } catch(e) {
+    toast("Some data couldn't load — API may still be waking up", true);
+  }
+}
+
+function renderOverview(){
+  const revenue = bills.reduce((s,b) => s + b.total_amount, 0);
+  const lowStock = products.filter(p => p.stock_qty < 5).length;
+  const activeLeads = leads.filter(l => !['won','lost'].includes(l.stage)).length;
+  const pipelineValue = leads.reduce((s,l) => s + (l.value||0), 0);
+  const presentToday = attendanceToday.filter(a => a.status === 'present').length;
+
+  document.getElementById('statRevenue').textContent = money(revenue);
+  document.getElementById('statPipeline').textContent = money(pipelineValue);
+  document.getElementById('statTeam').textContent = employees.length;
+  document.getElementById('statPresent').textContent = presentToday + ' / ' + employees.length;
+
+  document.getElementById('ov-revenue').textContent = money(revenue);
+  document.getElementById('ov-bills').textContent = bills.length;
+  document.getElementById('ov-products').textContent = products.length;
+  document.getElementById('ov-lowstock').textContent = lowStock;
+  document.getElementById('ov-leads').textContent = activeLeads;
+  document.getElementById('ov-pipeline').textContent = money(pipelineValue);
+
+  const recentWrap = document.getElementById('ov-recentBills');
+  const recent = bills.slice(0,5);
+  recentWrap.innerHTML = recent.length === 0
+    ? `<div class="empty">No sales yet.</div>`
+    : recent.map(b => `<div class="row"><span class="r-name">Bill #${b.id}</span><span class="r-val">${money(b.total_amount)}</span></div>`).join('');
+
+  const teamWrap = document.getElementById('ov-teamSnapshot');
+  teamWrap.innerHTML = employees.length === 0
+    ? `<div class="empty">No team members added yet.</div>`
+    : employees.slice(0,5).map(e => {
+        const {bg,fg} = avatarColor(e.name);
+        return `<div class="row"><span style="display:flex;align-items:center;gap:8px;"><span class="avatar-sm" style="background:${bg};color:${fg};">${initials(e.name)}</span><span class="r-name">${escapeHtml(e.name)}</span></span><span class="r-sub">${escapeHtml(e.role||'')}</span></div>`;
+      }).join('');
+}
+
+function renderEmployees(){
+  const wrap = document.getElementById('employeeListWrap');
+  if (employees.length === 0) {
+    wrap.innerHTML = `<div class="empty">No employees yet — add your first team member.</div>`;
+    return;
+  }
+  wrap.innerHTML = employees.map(e => {
+    const {bg,fg} = avatarColor(e.name);
+    return `<div class="row">
+      <span style="display:flex;align-items:center;gap:10px;">
+        <span class="avatar-sm" style="background:${bg};color:${fg};">${initials(e.name)}</span>
+        <span><span class="r-name" style="display:block;">${escapeHtml(e.name)}</span><span class="r-sub">${escapeHtml(e.role||'—')} · ${escapeHtml(e.department||'—')}</span></span>
+      </span>
+      <span style="display:flex;align-items:center;gap:10px;">
+        <span class="r-val">${e.salary ? money(e.salary) : ''}</span>
+        <button class="btn small danger" onclick="deleteEmployee(${e.id}, '${escapeHtml(e.name).replace(/'/g,"\\'")}')">Remove</button>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('addEmployeeBtn').addEventListener('click', async () => {
+  const name = document.getElementById('emp-name').value.trim();
+  if (!name) { toast('Name is required', true); return; }
+  const payload = {
+    name,
+    role: document.getElementById('emp-role').value.trim() || null,
+    department: document.getElementById('emp-dept').value.trim() || null,
+    phone: document.getElementById('emp-phone').value.trim() || null,
+    salary: parseFloat(document.getElementById('emp-salary').value) || 0,
+  };
+  const btn = document.getElementById('addEmployeeBtn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    await api('/employees', {method:'POST', body: JSON.stringify(payload)});
+    toast('Employee added');
+    ['emp-name','emp-role','emp-dept','emp-phone','emp-salary'].forEach(id => document.getElementById(id).value = '');
+    employees = await api('/employees');
+    renderEmployees();
+    renderOverview();
+  } catch(e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add employee';
+  }
+});
+
+async function deleteEmployee(id, name){
+  if (!confirm(`Remove ${name} from the team? This removes it for everyone using this shared demo.`)) return;
+  try {
+    await api('/employees/'+id, {method:'DELETE'});
+    toast('Employee removed');
+    employees = await api('/employees');
+    renderEmployees();
+    renderOverview();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+function renderAttendance(){
+  document.getElementById('todayDateLabel').textContent = new Date().toLocaleDateString('en-IN', {dateStyle:'medium'});
+  const wrap = document.getElementById('attendanceWrap');
+  if (employees.length === 0) {
+    wrap.innerHTML = `<div class="empty">Add employees first to mark attendance.</div>`;
+    return;
+  }
+  wrap.innerHTML = employees.map(e => {
+    const {bg,fg} = avatarColor(e.name);
+    const record = attendanceToday.find(a => a.employee_id === e.id);
+    const status = record ? record.status : null;
+    return `<div class="attend-card">
+      <span class="avatar-sm" style="background:${bg};color:${fg};">${initials(e.name)}</span>
+      <div class="ai">
+        <div class="aname">${escapeHtml(e.name)}</div>
+        <div class="arole">${escapeHtml(e.role||'')}</div>
+      </div>
+      <div class="attend-btns">
+        <button class="${status==='present'?'active-present':''}" onclick="markAttendance(${e.id},'present')">P</button>
+        <button class="${status==='absent'?'active-absent':''}" onclick="markAttendance(${e.id},'absent')">A</button>
+        <button class="${status==='leave'?'active-leave':''}" onclick="markAttendance(${e.id},'leave')">L</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function markAttendance(employeeId, status){
+  try {
+    await api('/attendance', {method:'POST', body: JSON.stringify({employee_id: employeeId, date: TODAY, status})});
+    toast('Attendance updated');
+    attendanceToday = await api('/attendance?date='+TODAY);
+    renderAttendance();
+    renderOverview();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+checkStatus();
+loadAll();
+</script>
+
+</body>
+</html>
