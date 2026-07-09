@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Demo — CRM / Lead Management | ShreeLix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1F3A; --navy-soft:#132A4D; --blue:#1E90FF; --blue-deep:#0B5FCC;
+    --amber:#F59E0B; --bg:#F8FAFC; --card:#FFFFFF; --text:#1E293B;
+    --muted:#5B6B82; --border:#E3E8F0; --green:#0E7A45; --green-bg:#E7F8F0;
+    --red:#C0392B; --red-bg:#FDECEA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--navy);}
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px;}
+
+  nav{background:var(--navy);padding:16px 0;}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-weight:700;font-size:18px;color:#fff;}
+  .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;border:1px solid rgba(255,255,255,0.15);}
+  .back-link{font-size:13.5px;color:rgba(255,255,255,0.75);}
+  .back-link:hover{color:#fff;}
+
+  .banner{background:#FFF7E6;border-bottom:1px solid #F5D98B;padding:12px 0;}
+  .banner .wrap{display:flex;align-items:center;gap:10px;font-size:13.5px;color:#8A6416;}
+  .banner b{color:#6B4A0C;}
+
+  header.page{padding:32px 0 8px;}
+  header.page .row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;}
+  header.page h1{font-size:28px;font-weight:700;}
+  header.page p{color:var(--muted);margin-top:6px;font-size:14.5px;max-width:560px;}
+  .status-row{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--muted);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#ccc;}
+  .dot.live{background:var(--green);}
+  .dot.down{background:var(--red);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--navy);color:#fff;padding:11px 20px;border-radius:8px;
+    font-weight:600;font-size:14px;border:none;cursor:pointer;
+  }
+  .btn:hover{background:var(--navy-soft);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .btn.secondary{background:transparent;border:1.5px solid var(--border);color:var(--navy);}
+  .btn.small{padding:6px 12px;font-size:12.5px;}
+  .btn.danger{background:var(--red);}
+  .btn.full{width:100%;margin-top:14px;}
+
+  label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;margin-top:14px;}
+  label:first-child{margin-top:0;}
+  input, select, textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+    font-family:'Inter',sans-serif;font-size:14px;background:#fff;color:var(--text);
+  }
+  input:focus, select:focus, textarea:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue);}
+
+  .board{display:flex;gap:16px;overflow-x:auto;padding:24px 0 60px;}
+  .column{flex:0 0 260px;background:#EEF2F7;border-radius:14px;padding:14px;min-height:200px;}
+  .column-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px;}
+  .column-head .name{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.03em;}
+  .column-head .count{font-size:12px;color:var(--muted);background:#fff;padding:2px 8px;border-radius:999px;}
+  .column-total{font-size:12px;color:var(--muted);padding:0 4px 10px;}
+
+  .lead-card{
+    background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;
+    border:1px solid var(--border);cursor:pointer;transition:box-shadow .15s ease;
+  }
+  .lead-card:hover{box-shadow:0 6px 16px rgba(11,31,58,0.1);}
+  .lead-card .lname{font-weight:600;font-size:14px;color:var(--navy);}
+  .lead-card .lcompany{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .lead-card .lvalue{font-size:12.5px;color:var(--blue-deep);font-weight:600;margin-top:8px;}
+  .lead-card .lsource{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;margin-top:6px;}
+  .lead-card .lsource.manual{background:#EEF2F7;color:var(--muted);}
+  .lead-card .lsource.retail-billing{background:var(--green-bg);color:var(--green);}
+  .lead-card .lsource.website{background:#EAF2FF;color:var(--blue-deep);}
+  .lead-card .lmove{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap;}
+  .lead-card .lmove button{
+    font-size:10.5px;padding:3px 7px;border-radius:5px;border:1px solid var(--border);
+    background:var(--bg);color:var(--muted);cursor:pointer;
+  }
+  .lead-card .lmove button:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+  .empty-col{padding:20px 8px;text-align:center;color:var(--muted);font-size:12.5px;}
+
+  .overlay{
+    display:none;position:fixed;inset:0;background:rgba(11,31,58,0.5);z-index:50;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .modal-head h3{font-size:19px;}
+  .modal-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;}
+
+  .activity-list{margin-top:10px;max-height:160px;overflow-y:auto;}
+  .activity-item{padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .activity-item:last-child{border-bottom:none;}
+  .activity-item .a-date{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);
+    background:var(--navy);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:500;
+    transition:transform .25s ease;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast.error{background:var(--red);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="mark">S</span> ShreeLix</div>
+    <a class="back-link" href="../">&larr; Back to website</a>
+  </div>
+</nav>
+
+<div class="banner">
+  <div class="wrap">
+    <span>&#9432;</span>
+    <span><b>Shared live demo</b> — this connects to a real database. Everything you add here is visible to other visitors trying the demo too. Feel free to explore freely.</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <header class="page">
+    <div class="row">
+      <div>
+        <h1>CRM & Lead Management</h1>
+        <p>A live pipeline board — add leads, move them through stages, and log activity notes as you follow up.</p>
+      </div>
+      <button class="btn" id="openAddLead">+ Add lead</button>
+    </div>
+    <div class="status-row">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Checking connection to live API…</span>
+    </div>
+  </header>
+
+  <div class="board" id="board"></div>
+</div>
+
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3>Add lead</h3><button class="modal-close" onclick="closeModal('addOverlay')">&times;</button></div>
+    <label>Name *</label>
+    <input id="new-name" placeholder="Contact person name">
+    <label>Company</label>
+    <input id="new-company" placeholder="Business name">
+    <label>Phone</label>
+    <input id="new-phone" placeholder="Optional">
+    <label>Email</label>
+    <input id="new-email" placeholder="Optional">
+    <label>Estimated value (₹)</label>
+    <input id="new-value" type="number" min="0" placeholder="0">
+    <button class="btn full" id="submitLeadBtn">Add lead</button>
+  </div>
+</div>
+
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="modal-head"><h3 id="detail-name">Lead</h3><button class="modal-close" onclick="closeModal('detailOverlay')">&times;</button></div>
+    <div id="detail-meta" style="font-size:13px;color:var(--muted);margin-bottom:6px;"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button class="btn danger small" id="detailDeleteBtn">Delete lead</button>
+    </div>
+    <label style="margin-top:20px;">Add activity note</label>
+    <textarea id="new-activity" rows="2" placeholder="e.g. Called, sent proposal, follow up next week…"></textarea>
+    <button class="btn secondary full" id="addActivityBtn">Log activity</button>
+    <div class="activity-list" id="activityList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = "https://retail-billing-system-hmq4.onrender.com";
+let leads = [];
+let currentDetailId = null;
+
+const STAGES = [
+  {key:'new', label:'New'},
+  {key:'contacted', label:'Contacted'},
+  {key:'qualified', label:'Qualified'},
+  {key:'proposal', label:'Proposal'},
+  {key:'won', label:'Won'},
+  {key:'lost', label:'Lost'},
+];
+
+function toast(msg, isError=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(()=> t.className = 'toast', 2800);
+}
+function money(n){ return '₹' + Number(n||0).toLocaleString('en-IN'); }
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+async function api(path, opts={}) {
+  const res = await fetch(API + path, {headers:{'Content-Type':'application/json'}, ...opts});
+  if (!res.ok) {
+    const err = await res.json().catch(()=>({detail:'Request failed'}));
+    throw new Error(err.detail || 'Request failed');
+  }
+  return res.json();
+}
+
+async function checkStatus(){
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  try {
+    await api('/health');
+    dot.className = 'dot live';
+    text.textContent = 'Connected to live API — this demo is fully functional';
+  } catch(e) {
+    dot.className = 'dot down';
+    text.textContent = 'API is waking up (free-tier hosting sleeps when idle) — retrying...';
+    setTimeout(checkStatus, 4000);
+  }
+}
+
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+async function loadLeads(){
+  try {
+    leads = await api('/leads');
+    renderBoard();
+  } catch(e) {
+    document.getElementById('board').innerHTML = `<div class="empty-col">Couldn't load leads — the API may still be waking up.</div>`;
+  }
+}
+
+function renderBoard(){
+  const board = document.getElementById('board');
+  board.innerHTML = STAGES.map(stage => {
+    const stageLeads = leads.filter(l => l.stage === stage.key);
+    const total = stageLeads.reduce((sum, l) => sum + (l.value || 0), 0);
+    const cards = stageLeads.length === 0
+      ? `<div class="empty-col">No leads here</div>`
+      : stageLeads.map(l => leadCardHtml(l, stage.key)).join('');
+    return `<div class="column">
+      <div class="column-head">
+        <span class="name">${stage.label}</span>
+        <span class="count">${stageLeads.length}</span>
+      </div>
+      <div class="column-total">${total > 0 ? money(total) + ' total' : ''}</div>
+      ${cards}
+    </div>`;
+  }).join('');
+}
+
+function leadCardHtml(lead, currentStage){
+  const otherStages = STAGES.filter(s => s.key !== currentStage);
+  const moveButtons = otherStages.map(s =>
+    `<button onclick="event.stopPropagation(); moveLead(${lead.id}, '${s.key}')">${s.label}</button>`
+  ).join('');
+  const sourceLabels = {manual:'Added manually', 'retail-billing':'From Retail Billing', website:'From Website'};
+  const sourceClass = lead.source || 'manual';
+  const sourceLabel = sourceLabels[sourceClass] || 'Added manually';
+  return `<div class="lead-card" onclick="openDetail(${lead.id})">
+    <div class="lname">${escapeHtml(lead.name)}</div>
+    ${lead.company ? `<div class="lcompany">${escapeHtml(lead.company)}</div>` : ''}
+    ${lead.value ? `<div class="lvalue">${money(lead.value)}</div>` : ''}
+    <span class="lsource ${sourceClass}">${sourceLabel}</span>
+    <div class="lmove">${moveButtons}</div>
+  </div>`;
+}
+
+async function moveLead(id, newStage){
+  try {
+    await api('/leads/'+id, {method:'PATCH', body: JSON.stringify({stage:newStage})});
+    toast('Lead moved to ' + newStage);
+    loadLeads();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+document.getElementById('openAddLead').addEventListener('click', () => openModal('addOverlay'));
+
+document.getElementById('submitLeadBtn').addEventListener('click', async () => {
+  const name = document.getElementById('new-name').value.trim();
+  if (!name) { toast('Name is required', true); return; }
+  const payload = {
+    name,
+    company: document.getElementById('new-company').value.trim() || null,
+    phone: document.getElementById('new-phone').value.trim() || null,
+    email: document.getElementById('new-email').value.trim() || null,
+    value: parseFloat(document.getElementById('new-value').value) || 0,
+    stage: 'new'
+  };
+  const btn = document.getElementById('submitLeadBtn');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    await api('/leads', {method:'POST', body: JSON.stringify(payload)});
+    toast('Lead added');
+    ['new-name','new-company','new-phone','new-email','new-value'].forEach(id => document.getElementById(id).value = '');
+    closeModal('addOverlay');
+    loadLeads();
+  } catch(e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Add lead';
+  }
+});
+
+function openDetail(id){
+  const lead = leads.find(l => l.id === id);
+  if (!lead) return;
+  currentDetailId = id;
+  document.getElementById('detail-name').textContent = lead.name;
+  const metaParts = [];
+  if (lead.company) metaParts.push(lead.company);
+  if (lead.phone) metaParts.push(lead.phone);
+  if (lead.email) metaParts.push(lead.email);
+  if (lead.value) metaParts.push(money(lead.value));
+  document.getElementById('detail-meta').textContent = metaParts.join(' · ');
+  renderActivities(lead.activities || []);
+  openModal('detailOverlay');
+}
+
+function renderActivities(activities){
+  const wrap = document.getElementById('activityList');
+  if (activities.length === 0) {
+    wrap.innerHTML = `<div style="padding:16px 0;color:var(--muted);font-size:13px;">No activity logged yet.</div>`;
+    return;
+  }
+  wrap.innerHTML = activities.slice().reverse().map(a => `
+    <div class="activity-item">
+      <div>${escapeHtml(a.note)}</div>
+      <div class="a-date">${new Date(a.created_at).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'})}</div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('addActivityBtn').addEventListener('click', async () => {
+  const note = document.getElementById('new-activity').value.trim();
+  if (!note || !currentDetailId) { toast('Write a note first', true); return; }
+  try {
+    await api(`/leads/${currentDetailId}/activities`, {method:'POST', body: JSON.stringify({note})});
+    toast('Activity logged');
+    document.getElementById('new-activity').value = '';
+    await loadLeads();
+    const lead = leads.find(l => l.id === currentDetailId);
+    if (lead) renderActivities(lead.activities || []);
+  } catch(e) {
+    toast(e.message, true);
+  }
+});
+
+document.getElementById('detailDeleteBtn').addEventListener('click', async () => {
+  if (!currentDetailId) return;
+  try {
+    await api('/leads/'+currentDetailId, {method:'DELETE'});
+    toast('Lead deleted');
+    closeModal('detailOverlay');
+    loadLeads();
+  } catch(e) {
+    toast(e.message, true);
+  }
+});
+
+checkStatus();
+loadLeads();
+</script>
+
+</body>
+</html>
