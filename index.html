@@ -60,6 +60,7 @@
   .hero{padding:80px 0 60px;}
   .hero .wrap{display:grid;grid-template-columns:1.05fr 0.95fr;gap:56px;align-items:center;}
   @media(max-width:900px){.hero .wrap{grid-template-columns:1fr;}}
+  @media(max-width:900px){.demo-grid{grid-template-columns:1fr 1fr !important;}}
   @media(max-width:700px){.demo-grid{grid-template-columns:1fr !important;}}
   .eyebrow{
     display:inline-flex;align-items:center;gap:8px;
@@ -217,25 +218,31 @@
 
 <section class="section" id="demo" style="padding-top:60px;padding-bottom:60px;">
   <div class="wrap">
-    <div style="text-align:center;max-width:600px;margin:0 auto 32px;">
+    <div style="text-align:center;max-width:640px;margin:0 auto 32px;">
       <div style="display:inline-flex;align-items:center;gap:8px;background:#EAF2FF;color:var(--blue-deep);font-size:12.5px;font-weight:600;padding:5px 14px;border-radius:999px;margin-bottom:16px;">
         <span style="width:7px;height:7px;border-radius:50%;background:#0E7A45;display:inline-block;"></span> LIVE DEMOS — REAL DATABASE
       </div>
       <h2 style="font-size:26px;font-weight:700;">See it working, not just described.</h2>
-      <p style="color:var(--muted);font-size:15px;margin-top:10px;">Two fully functional systems, genuinely connected — a purchase in Billing automatically creates a lead in the CRM, and vice versa with the contact form below.</p>
+      <p style="color:var(--muted);font-size:15px;margin-top:10px;">Three fully functional systems, genuinely connected — a purchase in Billing automatically creates a lead in the CRM, and the ERP dashboard ties every module into one executive view.</p>
     </div>
-    <div class="demo-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-      <div style="background:linear-gradient(135deg,var(--navy),var(--blue-deep));border-radius:18px;padding:32px;">
+    <div class="demo-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+      <div style="background:linear-gradient(135deg,var(--navy),var(--blue-deep));border-radius:18px;padding:28px;">
         <div style="color:#9FD3FF;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:10px;">Demo 1</div>
-        <h3 style="color:#fff;font-size:20px;font-weight:700;margin-bottom:10px;">Inventory, Billing & CRM</h3>
-        <p style="color:rgba(255,255,255,0.75);font-size:14px;margin-bottom:20px;">Add products, create bills, download PDF invoices, bulk-upload inventory via Excel.</p>
-        <a href="demo/retail-demo.html" style="display:inline-block;background:#fff;color:var(--navy);padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;">Try Billing demo →</a>
+        <h3 style="color:#fff;font-size:19px;font-weight:700;margin-bottom:10px;">Inventory, Billing & CRM</h3>
+        <p style="color:rgba(255,255,255,0.75);font-size:13.5px;margin-bottom:20px;">Add products, create bills, download PDF invoices, bulk-upload inventory via Excel.</p>
+        <a href="demo/retail-demo.html" style="display:inline-block;background:#fff;color:var(--navy);padding:11px 20px;border-radius:8px;font-weight:700;font-size:13.5px;">Try Billing demo →</a>
       </div>
-      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:32px;">
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:28px;">
         <div style="color:var(--blue-deep);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:10px;">Demo 2</div>
-        <h3 style="font-size:20px;font-weight:700;margin-bottom:10px;">CRM & Lead Management</h3>
-        <p style="color:var(--muted);font-size:14px;margin-bottom:20px;">A live pipeline board — leads flow in automatically from Billing purchases and website form submissions.</p>
-        <a href="demo/crm-demo.html" style="display:inline-block;background:var(--navy);color:#fff;padding:12px 22px;border-radius:8px;font-weight:700;font-size:14px;">Try CRM demo →</a>
+        <h3 style="font-size:19px;font-weight:700;margin-bottom:10px;">CRM & Lead Management</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">A live pipeline board — leads flow in automatically from Billing purchases and website form submissions.</p>
+        <a href="demo/crm-demo.html" style="display:inline-block;background:var(--navy);color:#fff;padding:11px 20px;border-radius:8px;font-weight:700;font-size:13.5px;">Try CRM demo →</a>
+      </div>
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:28px;">
+        <div style="color:var(--amber);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:10px;">Demo 3</div>
+        <h3 style="font-size:19px;font-weight:700;margin-bottom:10px;">Enterprise Dashboard</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:20px;">Sales, Inventory, CRM, and HR — employees and attendance — unified into one executive view.</p>
+        <a href="demo/erp-demo.html" style="display:inline-block;background:var(--navy);color:#fff;padding:11px 20px;border-radius:8px;font-weight:700;font-size:13.5px;">Try ERP demo →</a>
       </div>
     </div>
   </div>
