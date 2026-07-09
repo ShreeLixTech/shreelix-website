@@ -48,6 +48,14 @@
 
   .grid2{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;align-items:start;}
   @media(max-width:800px){.grid2{grid-template-columns:1fr;}}
+  @media(max-width:700px){#panel-dashboard > div:first-child{grid-template-columns:1fr 1fr !important;}}
+  @media(max-width:560px){
+    .bill-row{flex-wrap:wrap;}
+    .bill-row .search-select{flex:1 1 100%;}
+    .bill-row input[type=number]{flex:1 1 70px;}
+    header.page .row{flex-direction:column;align-items:flex-start;}
+    #panel-dashboard > div:first-child{grid-template-columns:1fr !important;}
+  }
 
   .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;}
   .card h3{font-size:17px;font-weight:600;margin-bottom:16px;}
@@ -147,13 +155,46 @@
 
 <div class="wrap">
   <div class="tabs">
-    <div class="tab active" data-tab="inventory">Inventory</div>
+    <div class="tab active" data-tab="dashboard">Dashboard</div>
+    <div class="tab" data-tab="inventory">Inventory</div>
     <div class="tab" data-tab="billing">New Bill</div>
     <div class="tab" data-tab="history">Bill History</div>
   </div>
 
+  <!-- DASHBOARD -->
+  <div class="panel active" id="panel-dashboard">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+      <div class="card" style="padding:20px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Total revenue</div>
+        <div id="dashRevenue" style="font-size:24px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;">₹0</div>
+      </div>
+      <div class="card" style="padding:20px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Bills created</div>
+        <div id="dashBillCount" style="font-size:24px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;">0</div>
+      </div>
+      <div class="card" style="padding:20px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Products in stock</div>
+        <div id="dashProductCount" style="font-size:24px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;">0</div>
+      </div>
+      <div class="card" style="padding:20px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Low / out of stock</div>
+        <div id="dashLowStock" style="font-size:24px;font-weight:700;color:#B8720C;font-family:'Poppins',sans-serif;">0</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Top selling products</h3>
+        <div id="topProductsWrap"><div class="loading-row">Loading…</div></div>
+      </div>
+      <div class="card">
+        <h3>Recent bills</h3>
+        <div id="recentBillsWrap"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- INVENTORY -->
-  <div class="panel active" id="panel-inventory">
+  <div class="panel" id="panel-inventory">
     <div class="grid2">
       <div class="card">
         <h3>Add product</h3>
@@ -283,6 +324,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
     if (tab.dataset.tab === 'billing') renderBillLines();
     if (tab.dataset.tab === 'history') loadHistory();
+    if (tab.dataset.tab === 'dashboard') loadDashboard();
   });
 });
 
@@ -306,7 +348,7 @@ async function loadInventory(){
         <td class="num">${money(p.price)}</td>
         <td class="num">${p.stock_qty}</td>
         <td>${badge}</td>
-        <td><button class="btn small danger" onclick="deleteProduct(${p.id})">Delete</button></td>
+        <td><button class="btn small danger" data-id="${p.id}" data-name="${escapeHtml(p.name)}" onclick="deleteProduct(this.dataset.id, this.dataset.name)">Delete</button></td>
       </tr>`;
     }).join('');
     wrap.innerHTML = `<table>
@@ -346,7 +388,8 @@ document.getElementById('addProductBtn').addEventListener('click', async () => {
   }
 });
 
-async function deleteProduct(id){
+async function deleteProduct(id, name){
+  if (!confirm(`Delete "${name}"? This removes it for everyone using this shared demo.`)) return;
   try {
     await api('/products/'+id, {method:'DELETE'});
     toast('Product removed');
@@ -538,6 +581,7 @@ document.getElementById('createBillBtn').addEventListener('click', async () => {
     document.getElementById('crmLinkBox').style.display = custName ? 'block' : 'none';
     billLines = [];
     await loadInventory();
+    loadDashboard();
     renderBillLines();
   } catch(e) {
     toast(e.message, true);
@@ -674,9 +718,67 @@ async function loadHistory(){
   }
 }
 
+// ---------- Dashboard ----------
+async function loadDashboard(){
+  try {
+    const [prods, bills] = await Promise.all([api('/products'), api('/bills')]);
+
+    const revenue = bills.reduce((s, b) => s + b.total_amount, 0);
+    document.getElementById('dashRevenue').textContent = money(revenue);
+    document.getElementById('dashBillCount').textContent = bills.length;
+    document.getElementById('dashProductCount').textContent = prods.length;
+    document.getElementById('dashLowStock').textContent = prods.filter(p => p.stock_qty < 5).length;
+
+    // Top selling products (by quantity sold across all bills)
+    const soldMap = {};
+    bills.forEach(b => b.items.forEach(i => {
+      soldMap[i.product_name] = (soldMap[i.product_name] || 0) + i.quantity;
+    }));
+    const topProducts = Object.entries(soldMap).sort((a,b) => b[1]-a[1]).slice(0,6);
+    const topWrap = document.getElementById('topProductsWrap');
+    if (topProducts.length === 0) {
+      topWrap.innerHTML = `<div class="empty">No sales yet — create a bill to see top products here.</div>`;
+    } else {
+      const maxQty = topProducts[0][1];
+      topWrap.innerHTML = topProducts.map(([name, qty]) => `
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:4px;">
+            <span>${escapeHtml(name)}</span><span style="color:var(--muted);">${qty} sold</span>
+          </div>
+          <div style="height:6px;background:var(--bg);border-radius:4px;overflow:hidden;">
+            <div style="height:100%;width:${(qty/maxQty*100)}%;background:var(--blue);border-radius:4px;"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Recent bills (last 5)
+    const recentWrap = document.getElementById('recentBillsWrap');
+    const recent = bills.slice(0, 5);
+    if (recent.length === 0) {
+      recentWrap.innerHTML = `<div class="empty">No bills yet.</div>`;
+    } else {
+      recentWrap.innerHTML = `<table>
+        <thead><tr><th>Bill</th><th class="num">Total</th><th>Date</th></tr></thead>
+        <tbody>${recent.map(b => `
+          <tr>
+            <td>#${b.id}</td>
+            <td class="num">${money(b.total_amount)}</td>
+            <td style="color:var(--muted);font-size:12.5px;">${new Date(b.created_at).toLocaleDateString('en-IN', {dateStyle:'medium'})}</td>
+          </tr>
+        `).join('')}</tbody>
+      </table>`;
+    }
+  } catch(e) {
+    document.getElementById('topProductsWrap').innerHTML = `<div class="empty">Couldn't load dashboard data.</div>`;
+    document.getElementById('recentBillsWrap').innerHTML = '';
+  }
+}
+
 // ---------- Init ----------
 checkStatus();
 loadInventory();
+loadDashboard();
 </script>
 
 </body>
