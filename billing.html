@@ -135,13 +135,6 @@
   </div>
 </nav>
 
-<div class="banner">
-  <div class="wrap">
-    <span>&#9432;</span>
-    <span><b>Early access:</b> private per-business accounts are coming soon. Until then, data entered here isn't fully isolated between users — avoid entering sensitive real business data for now.</span>
-  </div>
-</div>
-
 <header class="page">
   <div class="wrap">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
@@ -452,7 +445,7 @@ async function checkStatus(){
   try {
     await api('/health');
     dot.className = 'dot live';
-    text.textContent = 'Connected to live API — this demo is fully functional';
+    text.textContent = 'Connected';
   } catch(e) {
     dot.className = 'dot down';
     text.textContent = 'API is waking up (free-tier hosting sleeps when idle) — retrying...';
@@ -470,6 +463,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (tab.dataset.tab === 'billing') renderBillLines();
     if (tab.dataset.tab === 'history') loadHistory();
     if (tab.dataset.tab === 'dashboard') loadDashboard();
+    maybeShowCrossSell();
   });
 });
 
@@ -1261,11 +1255,17 @@ let crossSellIndex = 0;
 
 function maybeShowCrossSell(){
   const used = getTokensUsed();
-  // show at roughly 50% and 90% of free usage, once each
-  const shownKey = 'shreelix_crosssell_shown_' + used;
-  if ((used === Math.floor(FREE_TOKEN_LIMIT*0.5) || used === Math.floor(FREE_TOKEN_LIMIT*0.9)) && !sessionStorage.getItem(shownKey)) {
-    sessionStorage.setItem(shownKey, '1');
-    showCrossSell();
+  // show once after crossing 50% and once after crossing 90% of free usage
+  const thresholds = [
+    {pct: 0.5, key: 'shreelix_crosssell_shown_50'},
+    {pct: 0.9, key: 'shreelix_crosssell_shown_90'},
+  ];
+  for (const t of thresholds) {
+    if (used >= Math.floor(FREE_TOKEN_LIMIT * t.pct) && !localStorage.getItem(t.key)) {
+      localStorage.setItem(t.key, '1');
+      showCrossSell();
+      return; // only show one popup per action, even if both thresholds were crossed at once
+    }
   }
 }
 
@@ -1350,6 +1350,8 @@ loadInventory();
 loadDashboard();
 updateTokenBadge();
 showRegistrationIfNeeded();
+// Check independently of token consumption, so it still fires even if free tokens are already exhausted
+setTimeout(maybeShowCrossSell, 1500);
 </script>
 
 </body>
