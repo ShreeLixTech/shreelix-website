@@ -596,7 +596,7 @@ document.getElementById('uploadExcelBtn').addEventListener('click', async () => 
   statusEl.textContent = 'Reading file…';
   try {
     const data = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
+    const workbook = XLSX.read(data, {type: 'array'});
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
 
@@ -630,7 +630,8 @@ document.getElementById('uploadExcelBtn').addEventListener('click', async () => 
       const stock = parseInt(r.stock_qty || r.stock || r.quantity || 0);
       const gstRate = parseFloat(r.gst_rate || r.gst || r.tax_rate);
       const finalGst = isNaN(gstRate) ? 18 : gstRate;
-      const hsnCode = r.hsn_code || r.hsn || r.hsn_sac || null;
+      const hsnRaw = r.hsn_code || r.hsn || r.hsn_sac;
+      const hsnCode = (hsnRaw !== undefined && hsnRaw !== '') ? String(hsnRaw) : null;
       if (!name || isNaN(price)) { failed++; continue; }
 
       statusEl.textContent = `Uploading ${i+1} of ${normalizedRows.length}…`;
@@ -1255,13 +1256,14 @@ let crossSellIndex = 0;
 
 function maybeShowCrossSell(){
   const used = getTokensUsed();
-  // show once after crossing 50% and once after crossing 90% of free usage
+  // TEMP (testing): lowered from 50%/90% of 100 to just 3 and 8 actions, so you can verify this works without 50+ clicks.
+  // Once confirmed working, change these back to Math.floor(FREE_TOKEN_LIMIT*0.5) and *0.9.
   const thresholds = [
-    {pct: 0.5, key: 'shreelix_crosssell_shown_50'},
-    {pct: 0.9, key: 'shreelix_crosssell_shown_90'},
+    {value: 3, key: 'shreelix_crosssell_shown_50'},
+    {value: 8, key: 'shreelix_crosssell_shown_90'},
   ];
   for (const t of thresholds) {
-    if (used >= Math.floor(FREE_TOKEN_LIMIT * t.pct) && !localStorage.getItem(t.key)) {
+    if (used >= t.value && !localStorage.getItem(t.key)) {
       localStorage.setItem(t.key, '1');
       showCrossSell();
       return; // only show one popup per action, even if both thresholds were crossed at once
