@@ -313,6 +313,9 @@
             <div style="font-size:12.5px;color:var(--green);margin-bottom:6px;">⚡ This customer was automatically added to the CRM</div>
             <a href="demo/crm-demo.html" style="font-size:13px;font-weight:600;color:var(--blue-deep);text-decoration:underline;">View this lead in the CRM demo →</a>
           </div>
+          <div id="profileNudgeBox" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #B8E6CC;">
+            <div style="font-size:12.5px;color:#8A6416;">💡 Add your business address, phone, and GSTIN in the <a href="#" onclick="document.querySelector('.tab[data-tab=inventory]').click();return false;" style="text-decoration:underline;color:#6B4A0C;font-weight:600;">Inventory tab</a> for a more complete, professional invoice.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -551,13 +554,31 @@ function toggleGstGuide(e){
 const BIZ_FIELDS = ['biz-name', 'biz-address', 'biz-phone', 'biz-gstin'];
 const BIZ_KEYS = {'biz-name':'shreelix_business_name', 'biz-address':'shreelix_business_address', 'biz-phone':'shreelix_business_phone', 'biz-gstin':'shreelix_business_gstin'};
 
+let bizProfileSaveTimeout;
 BIZ_FIELDS.forEach(id => {
   const el = document.getElementById(id);
   el.value = localStorage.getItem(BIZ_KEYS[id]) || '';
   el.addEventListener('input', () => {
     localStorage.setItem(BIZ_KEYS[id], id === 'biz-gstin' ? el.value.trim().toUpperCase() : el.value);
+    clearTimeout(bizProfileSaveTimeout);
+    bizProfileSaveTimeout = setTimeout(saveBusinessProfileToServer, 800);
   });
 });
+
+async function saveBusinessProfileToServer(){
+  if (!USER_TOKEN) return;
+  try {
+    await api('/users/me/business-profile?user_token=' + encodeURIComponent(USER_TOKEN), {
+      method: 'PATCH',
+      body: JSON.stringify({
+        business_name: localStorage.getItem('shreelix_business_name') || null,
+        business_address: localStorage.getItem('shreelix_business_address') || null,
+        business_phone: localStorage.getItem('shreelix_business_phone') || null,
+        business_gstin: localStorage.getItem('shreelix_business_gstin') || null,
+      }),
+    });
+  } catch(e) { /* fails silently — data is still safe in localStorage as a fallback */ }
+}
 
 const bizGstinInput = document.getElementById('biz-gstin');
 let gstinCheckTimeout;
@@ -861,6 +882,8 @@ document.getElementById('createBillBtn').addEventListener('click', async () => {
     document.getElementById('successBillId').textContent = bill.id;
     document.getElementById('billSuccessBox').style.display = 'block';
     document.getElementById('crmLinkBox').style.display = custName ? 'block' : 'none';
+    const profileIncomplete = !businessAddress && !businessPhone && !businessGstin;
+    document.getElementById('profileNudgeBox').style.display = profileIncomplete ? 'block' : 'none';
     billLines = [];
     document.getElementById('c-gstin').value = '';
     document.getElementById('c-discount').value = '0';
@@ -881,163 +904,215 @@ function generateInvoicePDF(bill){
   const doc = new jsPDF({unit:'pt', format:'a4'});
   const navy = [11,31,58];
   const blue = [30,144,255];
-  const muted = [91,107,130];
+  const muted = [100,116,139];
+  const lightBg = [248,250,252];
+  const border = [226,232,240];
   const green = [14,122,69];
   const red = [192,57,43];
+  const dark = [30,41,59];
   const isGstBill = (bill.total_cgst > 0 || bill.total_sgst > 0 || bill.total_igst > 0);
   const sellerName = bill.business_name || 'Your Business';
+  const PAGE_W = 595, MARGIN = 42, CONTENT_W = PAGE_W - MARGIN*2;
 
-  // Header — the SELLER's business is the headline, not ShreeLix
+  // ---- Top accent bar + title ----
   doc.setFillColor(...navy);
-  doc.rect(0, 0, 595, 78, 'F');
-  doc.setTextColor(255,255,255);
-  doc.setFont('helvetica','bold'); doc.setFontSize(18);
-  doc.text(sellerName, 40, 38);
-  doc.setFont('helvetica','normal'); doc.setFontSize(9);
-  doc.setTextColor(200,215,235);
-  let sellerLine2 = [];
-  if (bill.business_address) sellerLine2.push(bill.business_address);
-  if (bill.business_phone) sellerLine2.push('Ph: ' + bill.business_phone);
-  if (sellerLine2.length) doc.text(sellerLine2.join('  ·  '), 40, 54);
-  if (bill.business_gstin) doc.text('GSTIN: ' + bill.business_gstin, 40, 68);
+  doc.rect(0, 0, PAGE_W, 6, 'F');
 
-  doc.setTextColor(255,255,255);
-  doc.setFont('helvetica','bold'); doc.setFontSize(13);
-  doc.text(isGstBill ? 'TAX INVOICE' : 'INVOICE', 555, 38, {align:'right'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  doc.setTextColor(200,215,235);
-  doc.text('#'+String(bill.id).padStart(5,'0'), 555, 54, {align:'right'});
-
-  // Bill To / Date row
-  let y = 110;
+  let y = 44;
+  doc.setFont('helvetica','bold'); doc.setFontSize(22);
   doc.setTextColor(...navy);
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('Bill To', 40, y);
-  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
-  doc.setTextColor(...muted);
-  doc.text(bill.customer_name || 'Walk-in customer', 40, y+16);
-  let buyerY = y+16;
-  if (bill.customer_address) { buyerY += 14; doc.text(bill.customer_address, 40, buyerY); }
-  if (bill.customer_phone) { buyerY += 14; doc.text('Ph: ' + bill.customer_phone, 40, buyerY); }
-  if (bill.customer_gstin) { buyerY += 14; doc.text('GSTIN: ' + bill.customer_gstin, 40, buyerY); }
+  doc.text(sellerName, MARGIN, y);
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.setFont('helvetica','bold'); doc.setFontSize(15);
   doc.setTextColor(...navy);
-  doc.text('Date', 420, y);
-  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
-  doc.setTextColor(...muted);
-  const dateStr = new Date(bill.created_at).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'});
-  doc.text(dateStr, 420, y+16);
-  if (isGstBill) doc.text(bill.is_interstate === 'yes' ? 'Interstate (IGST)' : 'Intrastate (CGST+SGST)', 420, y+32);
-  doc.text('Payment: ' + (bill.payment_mode||'cash').toUpperCase(), 420, y+48);
+  doc.text(isGstBill ? 'TAX INVOICE' : 'INVOICE', PAGE_W - MARGIN, y, {align:'right'});
 
-  // Table header
-  y = Math.max(buyerY + 40, y + 80);
-  doc.setFillColor(248,250,252);
-  doc.rect(40, y-16, 515, 26, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(9);
-  doc.setTextColor(...navy);
-  doc.text('ITEM', 46, y);
-  if (isGstBill) doc.text('HSN', 240, y, {align:'right'});
-  doc.text('QTY', 278, y, {align:'right'});
-  doc.text('RATE', 325, y, {align:'right'});
-  if (isGstBill) {
-    doc.text('TAXABLE', 390, y, {align:'right'});
-    doc.text('GST', 430, y, {align:'right'});
-  }
-  doc.text('AMOUNT', 549, y, {align:'right'});
-
-  y += 22;
+  y += 18;
   doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
-  bill.items.forEach(item => {
-    doc.setTextColor(30,41,59);
-    doc.text(item.product_name, 46, y);
+  doc.setTextColor(...muted);
+  let sellerDetailLine = [];
+  if (bill.business_address) sellerDetailLine.push(bill.business_address);
+  if (bill.business_phone) sellerDetailLine.push('Ph: ' + bill.business_phone);
+  if (sellerDetailLine.length) { doc.text(sellerDetailLine.join('   |   '), MARGIN, y); y += 13; }
+  if (bill.business_gstin) { doc.text('GSTIN: ' + bill.business_gstin, MARGIN, y); y += 13; }
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+  doc.setTextColor(...muted);
+  doc.text('#' + String(bill.id).padStart(5,'0'), PAGE_W - MARGIN, 62, {align:'right'});
+
+  y = Math.max(y, 80) + 10;
+  doc.setDrawColor(...border);
+  doc.setLineWidth(1);
+  doc.line(MARGIN, y, PAGE_W - MARGIN, y);
+  y += 26;
+
+  // ---- Bill To / Invoice meta — two clean boxed columns ----
+  const colW = (CONTENT_W - 20) / 2;
+  const boxTop = y;
+  doc.setFillColor(...lightBg);
+  doc.roundedRect(MARGIN, boxTop, colW, 90, 6, 6, 'F');
+  doc.roundedRect(MARGIN + colW + 20, boxTop, colW, 90, 6, 6, 'F');
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.setTextColor(...muted);
+  doc.text('BILL TO', MARGIN + 16, boxTop + 20);
+  doc.text('INVOICE DETAILS', MARGIN + colW + 36, boxTop + 20);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(11.5);
+  doc.setTextColor(...dark);
+  doc.text(bill.customer_name || 'Walk-in customer', MARGIN + 16, boxTop + 38);
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+  doc.setTextColor(...muted);
+  let by = boxTop + 53;
+  if (bill.customer_address) { doc.text(bill.customer_address, MARGIN + 16, by, {maxWidth: colW - 32}); by += 13; }
+  if (bill.customer_phone) { doc.text('Ph: ' + bill.customer_phone, MARGIN + 16, by); by += 13; }
+  if (bill.customer_gstin) { doc.text('GSTIN: ' + bill.customer_gstin, MARGIN + 16, by); }
+
+  const dateStr = new Date(bill.created_at).toLocaleDateString('en-IN', {dateStyle:'medium'});
+  const rx = MARGIN + colW + 36;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+  doc.setTextColor(...muted);
+  doc.text('Date', rx, boxTop + 38);
+  doc.setTextColor(...dark);
+  doc.text(dateStr, rx + 90, boxTop + 38);
+  doc.setTextColor(...muted);
+  doc.text('Payment', rx, boxTop + 54);
+  doc.setTextColor(...dark);
+  doc.text((bill.payment_mode||'cash').charAt(0).toUpperCase() + (bill.payment_mode||'cash').slice(1), rx + 90, boxTop + 54);
+  if (isGstBill) {
     doc.setTextColor(...muted);
-    if (isGstBill) doc.text(item.hsn_code || '—', 240, y, {align:'right'});
-    doc.text(String(item.quantity), 278, y, {align:'right'});
-    doc.text(item.unit_price.toLocaleString('en-IN'), 325, y, {align:'right'});
-    if (isGstBill) {
-      doc.text(item.taxable_value.toLocaleString('en-IN'), 390, y, {align:'right'});
-      doc.text(item.gst_rate + '%', 430, y, {align:'right'});
+    doc.text('Supply', rx, boxTop + 70);
+    doc.setTextColor(...dark);
+    doc.text(bill.is_interstate === 'yes' ? 'Interstate' : 'Intrastate', rx + 90, boxTop + 70);
+  }
+
+  y = boxTop + 90 + 30;
+
+  // ---- Items table ----
+  doc.setFillColor(...navy);
+  doc.rect(MARGIN, y - 18, CONTENT_W, 24, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
+  doc.setTextColor(255,255,255);
+  doc.text('ITEM', MARGIN + 10, y - 2);
+  if (isGstBill) doc.text('HSN', MARGIN + 230, y - 2, {align:'right'});
+  doc.text('QTY', MARGIN + 268, y - 2, {align:'right'});
+  doc.text('RATE', MARGIN + 315, y - 2, {align:'right'});
+  if (isGstBill) {
+    doc.text('TAXABLE', MARGIN + 380, y - 2, {align:'right'});
+    doc.text('GST', MARGIN + 420, y - 2, {align:'right'});
+  }
+  doc.text('AMOUNT', PAGE_W - MARGIN - 10, y - 2, {align:'right'});
+
+  y += 14;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+  bill.items.forEach((item, idx) => {
+    if (idx % 2 === 1) {
+      doc.setFillColor(...lightBg);
+      doc.rect(MARGIN, y - 13, CONTENT_W, 22, 'F');
     }
-    doc.setTextColor(30,41,59);
-    doc.text('Rs. '+item.line_total.toLocaleString('en-IN'), 549, y, {align:'right'});
+    doc.setTextColor(...dark);
+    doc.text(item.product_name, MARGIN + 10, y, {maxWidth: 190});
+    doc.setTextColor(...muted);
+    if (isGstBill) doc.text(item.hsn_code || '—', MARGIN + 230, y, {align:'right'});
+    doc.text(String(item.quantity), MARGIN + 268, y, {align:'right'});
+    doc.text(item.unit_price.toLocaleString('en-IN'), MARGIN + 315, y, {align:'right'});
+    if (isGstBill) {
+      doc.text(item.taxable_value.toLocaleString('en-IN'), MARGIN + 380, y, {align:'right'});
+      doc.text(item.gst_rate + '%', MARGIN + 420, y, {align:'right'});
+    }
+    doc.setTextColor(...dark);
+    doc.setFont('helvetica','bold');
+    doc.text('Rs. '+item.line_total.toLocaleString('en-IN'), PAGE_W - MARGIN - 10, y, {align:'right'});
+    doc.setFont('helvetica','normal');
     y += 22;
-    doc.setDrawColor(227,232,240);
-    doc.line(40, y-15, 555, y-15);
   });
 
-  // Summary: subtotal, discount, tax, total, payment status
-  y += 10;
-  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.setDrawColor(...border);
+  doc.line(MARGIN, y - 6, PAGE_W - MARGIN, y - 6);
+  y += 16;
+
+  // ---- Summary block (right-aligned, clean) ----
+  const sumX = PAGE_W - MARGIN - 170;
+  const sumValX = PAGE_W - MARGIN - 10;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
   doc.setTextColor(...muted);
-  doc.text('Subtotal', 430, y, {align:'right'});
-  doc.text('Rs. '+bill.subtotal.toLocaleString('en-IN'), 549, y, {align:'right'});
-  y += 17;
+  doc.text('Subtotal', sumX, y);
+  doc.setTextColor(...dark);
+  doc.text('Rs. '+bill.subtotal.toLocaleString('en-IN'), sumValX, y, {align:'right'});
+  y += 16;
+
   if (bill.discount_amount > 0) {
     doc.setTextColor(...red);
-    doc.text('Discount', 430, y, {align:'right'});
-    doc.text('− Rs. '+bill.discount_amount.toLocaleString('en-IN'), 549, y, {align:'right'});
-    y += 17;
-    doc.setTextColor(...muted);
+    doc.text('Discount', sumX, y);
+    doc.text('− Rs. '+bill.discount_amount.toLocaleString('en-IN'), sumValX, y, {align:'right'});
+    y += 16;
   }
+
   if (isGstBill) {
+    doc.setTextColor(...muted);
     if (bill.total_igst > 0) {
-      doc.text('IGST', 430, y, {align:'right'});
-      doc.text('Rs. '+bill.total_igst.toLocaleString('en-IN'), 549, y, {align:'right'});
-      y += 17;
+      doc.text('IGST', sumX, y);
+      doc.setTextColor(...dark);
+      doc.text('Rs. '+bill.total_igst.toLocaleString('en-IN'), sumValX, y, {align:'right'});
+      y += 16;
     } else {
-      doc.text('CGST', 430, y, {align:'right'});
-      doc.text('Rs. '+bill.total_cgst.toLocaleString('en-IN'), 549, y, {align:'right'});
-      y += 17;
-      doc.text('SGST', 430, y, {align:'right'});
-      doc.text('Rs. '+bill.total_sgst.toLocaleString('en-IN'), 549, y, {align:'right'});
-      y += 17;
+      doc.setTextColor(...muted);
+      doc.text('CGST', sumX, y);
+      doc.setTextColor(...dark);
+      doc.text('Rs. '+bill.total_cgst.toLocaleString('en-IN'), sumValX, y, {align:'right'});
+      y += 16;
+      doc.setTextColor(...muted);
+      doc.text('SGST', sumX, y);
+      doc.setTextColor(...dark);
+      doc.text('Rs. '+bill.total_sgst.toLocaleString('en-IN'), sumValX, y, {align:'right'});
+      y += 16;
     }
   }
 
   if (Math.abs(bill.round_off_amount || 0) > 0.001) {
     doc.setTextColor(...muted);
-    doc.text('Round off', 430, y, {align:'right'});
+    doc.text('Round off', sumX, y);
     const sign = bill.round_off_amount > 0 ? '+ ' : '− ';
-    doc.text(sign + 'Rs. ' + Math.abs(bill.round_off_amount).toFixed(2), 549, y, {align:'right'});
-    y += 17;
+    doc.setTextColor(...dark);
+    doc.text(sign + 'Rs. ' + Math.abs(bill.round_off_amount).toFixed(2), sumValX, y, {align:'right'});
+    y += 16;
   }
 
-  y += 6;
-  doc.setDrawColor(...navy);
-  doc.setLineWidth(1.5);
-  doc.line(350, y-12, 555, y-12);
-  doc.setFont('helvetica','bold'); doc.setFontSize(13);
-  doc.setTextColor(...navy);
-  doc.text('Total', 460, y+6, {align:'right'});
-  doc.text('Rs. '+bill.total_amount.toLocaleString('en-IN'), 549, y+6, {align:'right'});
-  y += 26;
+  y += 4;
+  doc.setFillColor(...navy);
+  doc.roundedRect(sumX - 14, y - 14, sumValX - sumX + 24, 30, 5, 5, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(12.5);
+  doc.setTextColor(255,255,255);
+  doc.text('Total', sumX, y + 6);
+  doc.text('Rs. '+bill.total_amount.toLocaleString('en-IN'), sumValX, y + 6, {align:'right'});
+  y += 34;
 
   if (bill.due_amount > 0) {
-    doc.setFont('helvetica','bold'); doc.setFontSize(10.5);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
     doc.setTextColor(...green);
-    doc.text('Paid', 460, y, {align:'right'});
-    doc.text('Rs. '+bill.amount_paid.toLocaleString('en-IN'), 549, y, {align:'right'});
-    y += 16;
+    doc.text('Paid', sumX, y);
+    doc.text('Rs. '+bill.amount_paid.toLocaleString('en-IN'), sumValX, y, {align:'right'});
+    y += 15;
     doc.setTextColor(...red);
-    doc.text('Balance Due', 460, y, {align:'right'});
-    doc.text('Rs. '+bill.due_amount.toLocaleString('en-IN'), 549, y, {align:'right'});
+    doc.text('Balance Due', sumX, y);
+    doc.text('Rs. '+bill.due_amount.toLocaleString('en-IN'), sumValX, y, {align:'right'});
     y += 20;
   }
 
   if (bill.notes) {
-    doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+    doc.setFont('helvetica','italic'); doc.setFontSize(9);
     doc.setTextColor(...muted);
-    doc.text('Note: ' + bill.notes, 40, y+6);
-    y += 20;
+    doc.text('Note: ' + bill.notes, MARGIN, y + 10, {maxWidth: CONTENT_W - 200});
   }
 
-  // Footer — ShreeLix as small footer credit, not the headline brand
+  // ---- Footer ----
+  doc.setDrawColor(...border);
+  doc.line(MARGIN, 772, PAGE_W - MARGIN, 772);
   doc.setFont('helvetica','normal'); doc.setFontSize(8);
   doc.setTextColor(...muted);
-  doc.text('This is a computer-generated invoice.' + (isGstBill ? ' GST rates shown are as entered by the seller.' : ''), 40, 785);
-  doc.text('Billing powered by ShreeLix  ·  support.shreelix@gmail.com  ·  +91 88401 77216', 40, 797);
+  doc.text('This is a computer-generated invoice.' + (isGstBill ? ' GST rates shown are as entered by the seller.' : ''), MARGIN, 784);
+  doc.text('Billing powered by ShreeLix  ·  support.shreelix@gmail.com  ·  +91 88401 77216', MARGIN, 796);
 
   doc.save((sellerName.replace(/[^a-zA-Z0-9]/g,'-')) + '-Invoice-' + bill.id + '.pdf');
 }
@@ -1157,15 +1232,20 @@ function isSignedIn(){
   return !!USER_TOKEN;
 }
 
+let googleInitDone = false;
 function initGoogleSignIn(){
+  if (googleInitDone) return;
   if (!window.google || !google.accounts) {
     // Google's script hasn't loaded yet — retry shortly
     setTimeout(initGoogleSignIn, 300);
     return;
   }
+  googleInitDone = true;
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     callback: handleGoogleCredential,
+    auto_select: false,
+    cancel_on_tap_outside: true,
   });
   google.accounts.id.renderButton(
     document.getElementById('googleSignInBtn'),
@@ -1185,9 +1265,9 @@ async function handleGoogleCredential(response){
     if (result.is_new_user) {
       openBusinessSetup();
     } else {
-      // Returning user — sync their saved business profile locally and go straight in
+      // Returning user — restore their real saved profile from the server, not blanks
       const u = result.user;
-      applyBusinessProfileLocally(u.business_name, '', '', '');
+      applyBusinessProfileLocally(u.business_name, u.business_address, u.phone, u.business_gstin);
       loadInventory();
       loadDashboard();
     }
@@ -1195,6 +1275,7 @@ async function handleGoogleCredential(response){
     if (e.message && e.message.includes('business_name')) {
       // First-time sign-in — needs business details first
       pendingCredential = response.credential;
+      document.getElementById('signInOverlay').style.display = 'none';
       openBusinessSetup();
     } else {
       errEl.textContent = "Couldn't sign in right now — please try again.";
@@ -1230,7 +1311,13 @@ async function submitBusinessSetup(){
   const btn = document.getElementById('regSubmitBtn');
   btn.disabled = true; btn.textContent = 'Starting…';
   try {
-    const result = await api('/auth/google', {method:'POST', body: JSON.stringify({credential: pendingCredential, business_name: bizName})});
+    const result = await api('/auth/google', {method:'POST', body: JSON.stringify({
+      credential: pendingCredential,
+      business_name: bizName,
+      business_address: bizAddress || null,
+      business_phone: phone || null,
+      business_gstin: gstin || null,
+    })});
     USER_TOKEN = result.owner_token;
     localStorage.setItem('shreelix_user_token', USER_TOKEN);
     applyBusinessProfileLocally(bizName, bizAddress, phone, gstin);
