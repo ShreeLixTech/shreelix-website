@@ -329,28 +329,36 @@
   </div>
 </div>
 
-<!-- REGISTRATION (lightweight, no password) -->
-<div class="overlay" id="registerOverlay" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,0.7);z-index:250;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:#fff;border-radius:18px;padding:32px;max-width:420px;width:100%;">
-    <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;margin-bottom:16px;overflow:hidden;">
+<!-- SIGN IN (Google) -->
+<div class="overlay" id="signInOverlay" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,0.7);z-index:250;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:18px;padding:32px;max-width:400px;width:100%;text-align:center;">
+    <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;overflow:hidden;">
       <img src="assets/shreelix-logo-icon.png" alt="ShreeLix" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
       <span style="display:none;color:#fff;font-weight:800;font-size:22px;font-family:'Poppins',sans-serif;align-items:center;justify-content:center;width:100%;height:100%;">S</span>
     </div>
     <h3 style="font-size:19px;margin-bottom:6px;">Welcome to ShreeLix Billing</h3>
-    <p style="font-size:13.5px;color:var(--muted);margin-bottom:20px;">Quick, no-password sign-in — this also sets up your business details so your invoices look professional from bill #1.</p>
+    <p style="font-size:13.5px;color:var(--muted);margin-bottom:24px;">Sign in with Google — your data stays tied to your account, on any device.</p>
+    <div id="googleSignInBtn" style="display:flex;justify-content:center;"></div>
+    <div id="signInError" style="color:var(--red);font-size:12.5px;margin-top:12px;"></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:18px;">This is early-access software. By continuing, you agree to be contacted about your account.</p>
+  </div>
+</div>
+
+<!-- BUSINESS DETAILS (first-time sign-in only) -->
+<div class="overlay" id="businessSetupOverlay" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,0.7);z-index:250;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:18px;padding:32px;max-width:420px;width:100%;">
+    <h3 style="font-size:19px;margin-bottom:6px;">Tell us about your business</h3>
+    <p style="font-size:13.5px;color:var(--muted);margin-bottom:20px;">One-time setup — this appears on every invoice you generate.</p>
     <label>Business name *</label>
     <input id="reg-business" placeholder="e.g. Sharma Traders">
     <label>Business address</label>
     <input id="reg-address" placeholder="Shop no., street, city, PIN">
-    <label>Your name</label>
-    <input id="reg-contact" placeholder="Optional">
     <label>Business phone</label>
     <input id="reg-phone" placeholder="e.g. 9876543210">
     <label>GSTIN <span style="font-weight:400;color:var(--muted);">(optional — add later if you don't have it yet)</span></label>
     <input id="reg-gstin" placeholder="e.g. 27ABCDE1234F1Z5" style="text-transform:uppercase;">
     <div id="regError" style="color:var(--red);font-size:12.5px;margin-top:8px;"></div>
-    <button class="btn full" id="regSubmitBtn" onclick="submitRegistration()">Start using ShreeLix Billing</button>
-    <p style="font-size:11.5px;color:var(--muted);margin-top:12px;text-align:center;">By continuing, you agree that this is early-access software — see the notice at the top of the page.</p>
+    <button class="btn full" id="regSubmitBtn" onclick="submitBusinessSetup()">Start using ShreeLix Billing</button>
   </div>
 </div>
 
@@ -411,6 +419,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const API = "https://retail-billing-system-hmq4.onrender.com";
 let products = [];
@@ -471,7 +480,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 async function loadInventory(){
   const wrap = document.getElementById('inventoryTableWrap');
   try {
-    products = await api('/products');
+    products = await api('/products?owner_token=' + encodeURIComponent(USER_TOKEN));
     if (products.length === 0) {
       wrap.innerHTML = `<div class="empty"><div class="big">📦</div>No products yet — add your first item on the left.</div>`;
       return;
@@ -518,7 +527,7 @@ document.getElementById('addProductBtn').addEventListener('click', async () => {
   const btn = document.getElementById('addProductBtn');
   btn.disabled = true; btn.textContent = 'Adding…';
   try {
-    await api('/products', {method:'POST', body: JSON.stringify({name, price, stock_qty: stock, gst_rate: gstRate, hsn_code: hsnCode || null})});
+    await api('/products', {method:'POST', body: JSON.stringify({name, price, stock_qty: stock, gst_rate: gstRate, hsn_code: hsnCode || null, owner_token: USER_TOKEN})});
     toast('Product added');
     document.getElementById('p-name').value = '';
     document.getElementById('p-price').value = '';
@@ -576,7 +585,7 @@ bizGstinInput.addEventListener('input', () => {
 async function deleteProduct(id, name){
   if (!confirm(`Delete "${name}"? Since accounts aren't set up yet, this may affect other users too.`)) return;
   try {
-    await api('/products/'+id, {method:'DELETE'});
+    await api('/products/'+id+'?owner_token='+encodeURIComponent(USER_TOKEN), {method:'DELETE'});
     toast('Product removed');
     loadInventory();
   } catch(e) {
@@ -636,7 +645,7 @@ document.getElementById('uploadExcelBtn').addEventListener('click', async () => 
 
       statusEl.textContent = `Uploading ${i+1} of ${normalizedRows.length}…`;
       try {
-        await api('/products', {method:'POST', body: JSON.stringify({name: String(name), price, stock_qty: stock, gst_rate: finalGst, hsn_code: hsnCode})});
+        await api('/products', {method:'POST', body: JSON.stringify({name: String(name), price, stock_qty: stock, gst_rate: finalGst, hsn_code: hsnCode, owner_token: USER_TOKEN})});
         success++;
       } catch(e) {
         failed++;
@@ -840,6 +849,7 @@ document.getElementById('createBillBtn').addEventListener('click', async () => {
       discount_amount: discountAmount,
       payment_mode: paymentMode,
       round_off: document.getElementById('c-roundoff').checked,
+      owner_token: USER_TOKEN,
       notes: notes || null,
     };
     if (paymentMode === 'credit' && amountPaidRaw !== '') {
@@ -1045,7 +1055,7 @@ async function loadHistory(){
   const wrap = document.getElementById('historyWrap');
   wrap.innerHTML = `<div class="loading-row">Loading bills…</div>`;
   try {
-    const bills = await api('/bills');
+    const bills = await api('/bills?owner_token=' + encodeURIComponent(USER_TOKEN));
     if (bills.length === 0) {
       wrap.innerHTML = `<div class="empty"><div class="big">🧾</div>No bills yet — create one in the "New Bill" tab.</div>`;
       return;
@@ -1081,7 +1091,10 @@ async function loadHistory(){
 // ---------- Dashboard ----------
 async function loadDashboard(){
   try {
-    const [prods, bills] = await Promise.all([api('/products'), api('/bills')]);
+    const [prods, bills] = await Promise.all([
+      api('/products?owner_token=' + encodeURIComponent(USER_TOKEN)),
+      api('/bills?owner_token=' + encodeURIComponent(USER_TOKEN))
+    ]);
 
     const revenue = bills.reduce((s, b) => s + b.total_amount, 0);
     document.getElementById('dashRevenue').textContent = money(revenue);
@@ -1136,68 +1149,105 @@ async function loadDashboard(){
 }
 
 // ---------- Init ----------
-// ---------- Registration (lightweight, no password) ----------
-function getUserToken(){
-  let token = localStorage.getItem('shreelix_user_token');
-  if (!token) {
-    token = 'u-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
-    localStorage.setItem('shreelix_user_token', token);
+// ---------- Sign-In (Google, verified server-side) ----------
+const GOOGLE_CLIENT_ID = "121520616317-h33rgmtjgvc1gd2i2dga9i2nnjlmhi9v.apps.googleusercontent.com";
+let USER_TOKEN = localStorage.getItem('shreelix_user_token') || null;
+
+function isSignedIn(){
+  return !!USER_TOKEN;
+}
+
+function initGoogleSignIn(){
+  if (!window.google || !google.accounts) {
+    // Google's script hasn't loaded yet — retry shortly
+    setTimeout(initGoogleSignIn, 300);
+    return;
   }
-  return token;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('googleSignInBtn'),
+    { theme: 'outline', size: 'large', width: 320 }
+  );
 }
-const USER_TOKEN = getUserToken();
 
-function isRegistered(){
-  return !!localStorage.getItem('shreelix_registered');
+async function handleGoogleCredential(response){
+  const errEl = document.getElementById('signInError');
+  errEl.textContent = '';
+  try {
+    const result = await api('/auth/google', {method:'POST', body: JSON.stringify({credential: response.credential})});
+    USER_TOKEN = result.owner_token;
+    localStorage.setItem('shreelix_user_token', USER_TOKEN);
+    document.getElementById('signInOverlay').style.display = 'none';
+
+    if (result.is_new_user) {
+      openBusinessSetup();
+    } else {
+      // Returning user — sync their saved business profile locally and go straight in
+      const u = result.user;
+      applyBusinessProfileLocally(u.business_name, '', '', '');
+      loadInventory();
+      loadDashboard();
+    }
+  } catch(e) {
+    if (e.message && e.message.includes('business_name')) {
+      // First-time sign-in — needs business details first
+      pendingCredential = response.credential;
+      openBusinessSetup();
+    } else {
+      errEl.textContent = "Couldn't sign in right now — please try again.";
+    }
+  }
 }
 
-async function submitRegistration(){
+let pendingCredential = null;
+
+function openBusinessSetup(){
+  document.getElementById('businessSetupOverlay').style.display = 'flex';
+}
+
+function applyBusinessProfileLocally(name, address, phone, gstin){
+  localStorage.setItem('shreelix_business_name', name || '');
+  localStorage.setItem('shreelix_business_address', address || '');
+  localStorage.setItem('shreelix_business_phone', phone || '');
+  localStorage.setItem('shreelix_business_gstin', gstin || '');
+  if (document.getElementById('biz-name')) document.getElementById('biz-name').value = name || '';
+  if (document.getElementById('biz-address')) document.getElementById('biz-address').value = address || '';
+  if (document.getElementById('biz-phone')) document.getElementById('biz-phone').value = phone || '';
+  if (document.getElementById('biz-gstin')) document.getElementById('biz-gstin').value = gstin || '';
+}
+
+async function submitBusinessSetup(){
   const bizName = document.getElementById('reg-business').value.trim();
   const bizAddress = document.getElementById('reg-address').value.trim();
-  const contactName = document.getElementById('reg-contact').value.trim();
   const phone = document.getElementById('reg-phone').value.trim();
   const gstin = document.getElementById('reg-gstin').value.trim().toUpperCase();
   if (!bizName) { document.getElementById('regError').textContent = 'Business name is required'; return; }
+  if (!pendingCredential) { document.getElementById('regError').textContent = 'Sign-in expired — please sign in again.'; return; }
 
   const btn = document.getElementById('regSubmitBtn');
   btn.disabled = true; btn.textContent = 'Starting…';
   try {
-    await api('/users/register', {method:'POST', body: JSON.stringify({
-      user_token: USER_TOKEN, business_name: bizName, contact_name: contactName || null, phone: phone || null, product: 'billing'
-    })});
-    localStorage.setItem('shreelix_registered', '1');
-
-    // Populate the business profile immediately — same info, saved once, used everywhere
-    localStorage.setItem('shreelix_business_name', bizName);
-    localStorage.setItem('shreelix_business_address', bizAddress);
-    localStorage.setItem('shreelix_business_phone', phone);
-    localStorage.setItem('shreelix_business_gstin', gstin);
-    // Reflect it in the Inventory tab's profile fields too, so it's visibly in sync
-    if (document.getElementById('biz-name')) document.getElementById('biz-name').value = bizName;
-    if (document.getElementById('biz-address')) document.getElementById('biz-address').value = bizAddress;
-    if (document.getElementById('biz-phone')) document.getElementById('biz-phone').value = phone;
-    if (document.getElementById('biz-gstin')) document.getElementById('biz-gstin').value = gstin;
-
-    document.getElementById('registerOverlay').style.display = 'none';
+    const result = await api('/auth/google', {method:'POST', body: JSON.stringify({credential: pendingCredential, business_name: bizName})});
+    USER_TOKEN = result.owner_token;
+    localStorage.setItem('shreelix_user_token', USER_TOKEN);
+    applyBusinessProfileLocally(bizName, bizAddress, phone, gstin);
+    document.getElementById('businessSetupOverlay').style.display = 'none';
+    loadInventory();
+    loadDashboard();
   } catch(e) {
-    document.getElementById('regError').textContent = "Couldn't connect — the server may be waking up. Try again in a few seconds.";
+    document.getElementById('regError').textContent = "Couldn't save — please try again.";
   } finally {
     btn.disabled = false; btn.textContent = 'Start using ShreeLix Billing';
   }
 }
 
-function showRegistrationIfNeeded(){
-  if (!isRegistered()) {
-    document.getElementById('registerOverlay').style.display = 'flex';
-    return;
-  }
-  // Safety net: someone registered before business-profile fields existed — prompt once to complete it
-  if (!localStorage.getItem('shreelix_business_name')) {
-    document.getElementById('reg-business').value = '';
-    const modal = document.getElementById('registerOverlay');
-    modal.querySelector('h3').textContent = 'Complete your business details';
-    modal.querySelector('p').textContent = "One more thing — we're missing your business details, which is why invoices show a placeholder name. Add them now so your invoices look right.";
-    modal.style.display = 'flex';
+function showSignInIfNeeded(){
+  if (!isSignedIn()) {
+    document.getElementById('signInOverlay').style.display = 'flex';
+    initGoogleSignIn();
   }
 }
 
@@ -1221,7 +1271,7 @@ function consumeToken(){
   updateTokenBadge();
   maybeShowCrossSell();
   // Track server-side too, for the admin portal — fire and forget, doesn't block the UI
-  if (isRegistered()) {
+  if (isSignedIn()) {
     api('/users/track?user_token=' + encodeURIComponent(USER_TOKEN), {method:'POST'}).catch(()=>{});
   }
   return true;
@@ -1348,10 +1398,12 @@ async function submitReturn(){
 }
 
 checkStatus();
-loadInventory();
-loadDashboard();
+if (isSignedIn()) {
+  loadInventory();
+  loadDashboard();
+}
 updateTokenBadge();
-showRegistrationIfNeeded();
+showSignInIfNeeded();
 // Check independently of token consumption, so it still fires even if free tokens are already exhausted
 setTimeout(maybeShowCrossSell, 1500);
 </script>
