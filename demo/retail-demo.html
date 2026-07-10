@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Demo — Inventory, Billing & CRM | ShreeLix</title>
+<title>ShreeLix Billing — Inventory, Billing & GST Invoicing</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -138,7 +138,7 @@
 <div class="banner">
   <div class="wrap">
     <span>&#9432;</span>
-    <span><b>Shared live demo</b> — this connects to a real database. Everything you add here is visible to other visitors trying the demo too. Feel free to explore freely.</span>
+    <span><b>Early access:</b> private per-business accounts are coming soon. Until then, data entered here isn't fully isolated between users — avoid entering sensitive real business data for now.</span>
   </div>
 </div>
 
@@ -146,8 +146,8 @@
   <div class="wrap">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
       <div>
-        <h1>Inventory, Billing & CRM</h1>
-        <p>A live, working example of the systems ShreeLix builds — this instance is set up for a product-based business, but the same architecture adapts to healthcare, education, manufacturing, logistics, or any operational workflow.</p>
+        <h1>ShreeLix Billing</h1>
+        <p>Inventory, billing, and GST-compliant invoicing — built for small and growing businesses. Add stock, bill customers, and download proper tax invoices in seconds.</p>
       </div>
       <div style="text-align:right;flex-shrink:0;">
         <div id="tokenBadge" style="background:var(--bg);border:1px solid var(--border);padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--navy);white-space:nowrap;">100 free credits left</div>
@@ -311,7 +311,7 @@
       <span style="display:none;color:#fff;font-weight:800;font-size:24px;font-family:'Poppins',sans-serif;align-items:center;justify-content:center;width:100%;height:100%;">S</span>
     </div>
     <h3 style="font-size:20px;margin-bottom:8px;">You've used your free credits</h3>
-    <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">This demo gives you a limited number of free actions to try the product. To keep using it without limits, get in touch and we'll set you up with a paid plan.</p>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:20px;">You get 100 free actions to try ShreeLix Billing. To keep using it without limits, get in touch and we'll set you up with a paid plan.</p>
     <div style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:16px;">
       <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">Scan to pay via UPI (once confirmed with ShreeLix)</div>
       <div style="width:120px;height:120px;background:#fff;border:1.5px dashed var(--border);border-radius:10px;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">QR pending setup</div>
@@ -491,7 +491,7 @@ bizGstinInput.addEventListener('input', () => {
 });
 
 async function deleteProduct(id, name){
-  if (!confirm(`Delete "${name}"? This removes it for everyone using this shared demo.`)) return;
+  if (!confirm(`Delete "${name}"? Since accounts aren't set up yet, this may affect other users too.`)) return;
   try {
     await api('/products/'+id, {method:'DELETE'});
     toast('Product removed');
@@ -857,7 +857,7 @@ function generateInvoicePDF(bill){
   // Footer
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
   doc.setTextColor(...muted);
-  doc.text('Generated via the ShreeLix live demo — support.shreelix@gmail.com  ·  Call/WhatsApp +91 88401 77216', 40, 790);
+  doc.text('Generated via ShreeLix Billing — support.shreelix@gmail.com  ·  Call/WhatsApp +91 88401 77216', 40, 790);
   if (isGstBill) {
     doc.text('This is a computer-generated tax invoice. GST rates shown are as entered by the seller.', 40, 802);
   }
@@ -1043,7 +1043,7 @@ function closeCrossSell(){
 async function crossSellInterested(productName){
   try {
     await api('/leads', {method:'POST', body: JSON.stringify({
-      name: 'Billing demo visitor',
+      name: 'ShreeLix Billing user',
       company: null,
       source: 'website',
       stage: 'new',
