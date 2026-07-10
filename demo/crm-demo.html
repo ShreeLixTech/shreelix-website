@@ -9,16 +9,15 @@
 <style>
   :root{
     --navy:#0B1F3A; --navy-soft:#132A4D; --blue:#1E90FF; --blue-deep:#0B5FCC;
-    --amber:#F59E0B; --bg:#F6F8FB; --card:#FFFFFF; --text:#1E293B;
-    --muted:#64748B; --border:#E3E8F0; --green:#0E7A45; --green-bg:#E7F8F0;
-    --red:#C0392B; --red-bg:#FDECEA; --indigo:#6366F1; --indigo-bg:#EEF0FE;
+    --amber:#F59E0B; --bg:#F8FAFC; --card:#FFFFFF; --text:#1E293B;
+    --muted:#5B6B82; --border:#E3E8F0; --green:#0E7A45; --green-bg:#E7F8F0;
+    --red:#C0392B; --red-bg:#FDECEA;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
   h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--navy);}
   a{color:inherit;text-decoration:none;}
-  .wrap{max-width:1320px;margin:0 auto;padding:0 24px;}
-  button{font-family:'Inter',sans-serif;}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 24px;}
 
   nav{background:var(--navy);padding:16px 0;}
   nav .wrap{display:flex;align-items:center;justify-content:space-between;}
@@ -27,38 +26,30 @@
   .back-link{font-size:13.5px;color:rgba(255,255,255,0.75);}
   .back-link:hover{color:#fff;}
 
-  .banner{background:#FFF7E6;border-bottom:1px solid #F5D98B;padding:10px 0;}
-  .banner .wrap{display:flex;align-items:center;gap:10px;font-size:13px;color:#8A6416;}
+  .banner{background:#FFF7E6;border-bottom:1px solid #F5D98B;padding:12px 0;}
+  .banner .wrap{display:flex;align-items:center;gap:10px;font-size:13.5px;color:#8A6416;}
   .banner b{color:#6B4A0C;}
 
-  /* Dashboard header */
-  .dash-header{background:linear-gradient(135deg,var(--navy) 0%,var(--blue-deep) 100%);padding:32px 0;}
-  .dash-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:24px;}
-  .dash-top h1{color:#fff;font-size:24px;font-weight:700;}
-  .dash-top p{color:rgba(255,255,255,0.7);font-size:13.5px;margin-top:4px;max-width:480px;}
-  .status-row{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12.5px;color:rgba(255,255,255,0.65);}
-  .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.4);}
-  .dot.live{background:#4ADE80;}
-  .dot.down{background:#F87171;}
+  header.page{padding:32px 0 8px;}
+  header.page .row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;}
+  header.page h1{font-size:28px;font-weight:700;}
+  header.page p{color:var(--muted);margin-top:6px;font-size:14.5px;max-width:560px;}
+  .status-row{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--muted);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#ccc;}
+  .dot.live{background:var(--green);}
+  .dot.down{background:var(--red);}
 
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:6px;
-    background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;
-    font-weight:600;font-size:13.5px;border:none;cursor:pointer;white-space:nowrap;
+    background:var(--navy);color:#fff;padding:11px 20px;border-radius:8px;
+    font-weight:600;font-size:14px;border:none;cursor:pointer;
   }
   .btn:hover{background:var(--navy-soft);}
   .btn:disabled{opacity:0.5;cursor:not-allowed;}
-  .btn.light{background:#fff;color:var(--navy);}
-  .btn.light:hover{background:#F1F5F9;}
   .btn.secondary{background:transparent;border:1.5px solid var(--border);color:var(--navy);}
-  .btn.small{padding:6px 12px;font-size:12px;}
+  .btn.small{padding:6px 12px;font-size:12.5px;}
   .btn.danger{background:var(--red);}
   .btn.full{width:100%;margin-top:14px;}
-
-  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-  .stat-card{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:16px 18px;}
-  .stat-card .slabel{font-size:11.5px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
-  .stat-card .svalue{font-size:22px;font-weight:700;color:#fff;font-family:'Poppins',sans-serif;}
 
   label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;margin-top:14px;}
   label:first-child{margin-top:0;}
@@ -68,75 +59,49 @@
   }
   input:focus, select:focus, textarea:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue);}
 
-  /* Toolbar */
-  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 0 16px;flex-wrap:wrap;}
-  .search-wrap{position:relative;flex:1;max-width:320px;min-width:200px;}
-  .search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:0.4;}
-  .search-wrap input{padding-left:34px;}
-  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);}
-  .legend span{display:inline-flex;align-items:center;gap:5px;}
-  .legend .sw{width:8px;height:8px;border-radius:50%;display:inline-block;}
-
-  /* Board */
-  .board{display:flex;gap:14px;overflow-x:auto;padding:0 0 40px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+  .board{display:flex;gap:16px;overflow-x:auto;padding:24px 0 20px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
   .board::-webkit-scrollbar{height:8px;}
   .board::-webkit-scrollbar-track{background:transparent;}
   .board::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
   .board::-webkit-scrollbar-thumb:hover{background:#c8d0dc;}
-
-  .column{flex:0 0 268px;background:#EDF1F6;border-radius:14px;padding:12px;min-height:160px;}
-  .column-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:2px 4px;}
-  .column-head .sw{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-  .column-head .name{font-size:12.5px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.03em;flex:1;}
-  .column-head .count{font-size:11.5px;color:var(--muted);background:#fff;padding:2px 8px;border-radius:999px;}
-  .column-total{font-size:11.5px;color:var(--muted);padding:0 4px 10px;}
+  .column{flex:0 0 260px;background:#EEF2F7;border-radius:14px;padding:14px;min-height:200px;}
+  .column-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding:0 4px;}
+  .column-head .name{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.03em;}
+  .column-head .count{font-size:12px;color:var(--muted);background:#fff;padding:2px 8px;border-radius:999px;}
+  .column-total{font-size:12px;color:var(--muted);padding:0 4px 10px;}
 
   .lead-card{
-    background:#fff;border-radius:10px;padding:13px;margin-bottom:9px;
+    background:#fff;border-radius:10px;padding:14px;margin-bottom:10px;
     border:1px solid var(--border);cursor:pointer;transition:box-shadow .15s ease, transform .15s ease;
-    animation: cardIn .2s ease;
+    animation: cardIn .25s ease;
   }
-  @keyframes cardIn{ from{opacity:0;transform:translateY(4px);} to{opacity:1;transform:translateY(0);} }
-  .lead-card:hover{box-shadow:0 6px 16px rgba(11,31,58,0.1);transform:translateY(-1px);border-color:#D5DCE5;}
-
-  .lc-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-  .lc-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;font-family:'Poppins',sans-serif;flex-shrink:0;}
-  .lc-info{min-width:0;flex:1;}
-  .lname{font-weight:600;font-size:13.5px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .lcompany{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-
-  .lc-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
-  .lvalue{font-size:12.5px;color:var(--blue-deep);font-weight:700;}
-  .lsource{font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;}
-  .lsource.manual{background:#EEF2F7;color:var(--muted);}
-  .lsource.retail-billing{background:var(--green-bg);color:var(--green);}
-  .lsource.website{background:#EAF2FF;color:var(--blue-deep);}
-
-  .lc-move{margin-top:10px;}
-  .lc-move select{
-    width:100%;font-size:11.5px;padding:6px 8px;border-radius:6px;border:1px solid var(--border);
+  @keyframes cardIn{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+  .lead-card:hover{box-shadow:0 6px 16px rgba(11,31,58,0.1);transform:translateY(-2px);}
+  .lead-card .lname{font-weight:600;font-size:14px;color:var(--navy);}
+  .lead-card .lcompany{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .lead-card .lvalue{font-size:12.5px;color:var(--blue-deep);font-weight:600;margin-top:8px;}
+  .lead-card .lsource{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:5px;margin-top:6px;}
+  .lead-card .lsource.manual{background:#EEF2F7;color:var(--muted);}
+  .lead-card .lsource.retail-billing{background:var(--green-bg);color:var(--green);}
+  .lead-card .lsource.website{background:#EAF2FF;color:var(--blue-deep);}
+  .lead-card .lmove{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap;}
+  .lead-card .lmove button{
+    font-size:10.5px;padding:3px 7px;border-radius:5px;border:1px solid var(--border);
     background:var(--bg);color:var(--muted);cursor:pointer;
   }
+  .lead-card .lmove button:hover{background:var(--blue);color:#fff;border-color:var(--blue);}
 
-  .empty-col{padding:24px 8px;text-align:center;color:var(--muted);font-size:12px;}
-  .empty-board{width:100%;padding:70px 20px;text-align:center;color:var(--muted);}
-  .empty-board svg{opacity:0.35;margin-bottom:14px;}
-  .empty-board .et{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px;}
-  .empty-board .ed{font-size:13px;}
+  .empty-col{padding:20px 8px;text-align:center;color:var(--muted);font-size:12.5px;}
 
-  /* Modal */
   .overlay{
     display:none;position:fixed;inset:0;background:rgba(11,31,58,0.5);z-index:50;
     align-items:center;justify-content:center;padding:20px;
   }
   .overlay.open{display:flex;}
-  .modal{background:#fff;border-radius:16px;padding:0;width:100%;max-width:460px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;}
-  .modal-head{padding:24px 28px 16px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--border);}
-  .modal-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1;}
-  .modal-body{padding:24px 28px;overflow-y:auto;}
-  .detail-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;font-family:'Poppins',sans-serif;margin-bottom:12px;}
-  .detail-meta-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:4px;}
-  .detail-meta-row svg{opacity:0.6;flex-shrink:0;}
+  .modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .modal-head h3{font-size:19px;}
+  .modal-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;}
 
   .activity-list{margin-top:10px;max-height:160px;overflow-y:auto;}
   .activity-item{padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;}
@@ -151,13 +116,9 @@
   .toast.show{transform:translateX(-50%) translateY(0);}
   .toast.error{background:var(--red);}
 
-  @media(max-width:700px){
-    .stat-grid{grid-template-columns:1fr 1fr;}
-    .dash-top{flex-direction:column;}
-  }
   @media(max-width:640px){
-    .toolbar{flex-direction:column;align-items:stretch;}
-    .search-wrap{max-width:none;}
+    header.page .row{flex-direction:column;align-items:flex-start;}
+    #openAddLead{width:100%;}
     .modal{max-width:100%;margin:0 10px;}
   }
 </style>
@@ -174,102 +135,76 @@
 <div class="banner">
   <div class="wrap">
     <span>&#9432;</span>
-    <span><b>Shared live demo</b> — everything you add here is visible to other visitors trying the demo too.</span>
-  </div>
-</div>
-
-<div class="dash-header">
-  <div class="wrap">
-    <div class="dash-top">
-      <div>
-        <h1>CRM & lead management</h1>
-        <p>A live pipeline board — leads flow in from manual entry, the website contact form, and Retail Billing purchases.</p>
-        <div class="status-row">
-          <span class="dot" id="statusDot"></span>
-          <span id="statusText">Checking connection to live API…</span>
-        </div>
-      </div>
-      <button class="btn light" id="openAddLead">+ Add lead</button>
-    </div>
-    <div class="stat-grid">
-      <div class="stat-card">
-        <div class="slabel">Total leads</div>
-        <div class="svalue" id="statTotalLeads">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="slabel">Pipeline value</div>
-        <div class="svalue" id="statPipelineValue">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="slabel">Qualified customers</div>
-        <div class="svalue" id="statWon">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="slabel">From automation</div>
-        <div class="svalue" id="statAutomated">—</div>
-      </div>
-    </div>
+    <span><b>Shared live demo</b> — this connects to a real database. Everything you add here is visible to other visitors trying the demo too. Feel free to explore freely.</span>
   </div>
 </div>
 
 <div class="wrap">
-  <div class="toolbar">
-    <div class="search-wrap">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input id="searchInput" placeholder="Search by name or company…">
+  <header class="page">
+    <div class="row">
+      <div>
+        <h1>CRM & Lead Management</h1>
+        <p>A live pipeline board — add leads, move them through stages, and log activity notes as you follow up.</p>
+      </div>
+      <button class="btn" id="openAddLead">+ Add lead</button>
     </div>
-    <div class="legend">
-      <span><i class="sw" style="background:#94A3B8;"></i>New</span>
-      <span><i class="sw" style="background:var(--blue);"></i>Contacted</span>
-      <span><i class="sw" style="background:var(--indigo);"></i>Qualified</span>
-      <span><i class="sw" style="background:var(--amber);"></i>Proposal</span>
-      <span><i class="sw" style="background:var(--green);"></i>Won</span>
-      <span><i class="sw" style="background:var(--red);"></i>Lost</span>
+    <div class="status-row">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Checking connection to live API…</span>
     </div>
-  </div>
+    <div style="margin-top:14px;padding:12px 16px;background:#EAF2FF;border-radius:10px;font-size:13px;color:var(--blue-deep);">
+      ⚡ Leads here can come from three places: added manually, submitted through the <a href="../#contact" style="text-decoration:underline;">website contact form</a>, or automatically synced from a purchase in <a href="../billing.html" style="text-decoration:underline;">ShreeLix Billing</a>.
+    </div>
+  </header>
 
   <div class="board" id="board"></div>
+
+<div class="wrap" id="statsWrap" style="display:none;padding-top:20px;padding-bottom:20px;">
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Total leads</div>
+      <div id="statTotalLeads" style="font-size:22px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;"></div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Pipeline value</div>
+      <div id="statPipelineValue" style="font-size:22px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;"></div>
+    </div>
+    <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Won (repeat customers)</div>
+      <div id="statWon" style="font-size:22px;font-weight:700;color:var(--green);font-family:'Poppins',sans-serif;"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <div class="overlay" id="addOverlay">
   <div class="modal">
-    <div class="modal-head">
-      <h3 style="font-size:18px;">Add lead</h3>
-      <button class="modal-close" onclick="closeModal('addOverlay')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <label>Name *</label>
-      <input id="new-name" placeholder="Contact person name">
-      <label>Company</label>
-      <input id="new-company" placeholder="Business name">
-      <label>Phone</label>
-      <input id="new-phone" placeholder="Optional">
-      <label>Email</label>
-      <input id="new-email" placeholder="Optional">
-      <label>Estimated value (₹)</label>
-      <input id="new-value" type="number" min="0" placeholder="0">
-      <button class="btn full" id="submitLeadBtn">Add lead</button>
-    </div>
+    <div class="modal-head"><h3>Add lead</h3><button class="modal-close" onclick="closeModal('addOverlay')">&times;</button></div>
+    <label>Name *</label>
+    <input id="new-name" placeholder="Contact person name">
+    <label>Company</label>
+    <input id="new-company" placeholder="Business name">
+    <label>Phone</label>
+    <input id="new-phone" placeholder="Optional">
+    <label>Email</label>
+    <input id="new-email" placeholder="Optional">
+    <label>Estimated value (₹)</label>
+    <input id="new-value" type="number" min="0" placeholder="0">
+    <button class="btn full" id="submitLeadBtn">Add lead</button>
   </div>
 </div>
 
 <div class="overlay" id="detailOverlay">
   <div class="modal">
-    <div class="modal-head">
-      <div>
-        <div class="detail-avatar" id="detail-avatar"></div>
-        <h3 id="detail-name" style="font-size:18px;">Lead</h3>
-        <div id="detail-meta"></div>
-      </div>
-      <button class="modal-close" onclick="closeModal('detailOverlay')">&times;</button>
-    </div>
-    <div class="modal-body">
+    <div class="modal-head"><h3 id="detail-name">Lead</h3><button class="modal-close" onclick="closeModal('detailOverlay')">&times;</button></div>
+    <div id="detail-meta" style="font-size:13px;color:var(--muted);margin-bottom:6px;"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
       <button class="btn danger small" id="detailDeleteBtn">Delete lead</button>
-      <label style="margin-top:20px;">Add activity note</label>
-      <textarea id="new-activity" rows="2" placeholder="e.g. Called, sent proposal, follow up next week…"></textarea>
-      <button class="btn secondary full" id="addActivityBtn">Log activity</button>
-      <div class="activity-list" id="activityList"></div>
     </div>
+    <label style="margin-top:20px;">Add activity note</label>
+    <textarea id="new-activity" rows="2" placeholder="e.g. Called, sent proposal, follow up next week…"></textarea>
+    <button class="btn secondary full" id="addActivityBtn">Log activity</button>
+    <div class="activity-list" id="activityList"></div>
   </div>
 </div>
 
@@ -279,15 +214,14 @@
 const API = "https://retail-billing-system-hmq4.onrender.com";
 let leads = [];
 let currentDetailId = null;
-let searchQuery = '';
 
 const STAGES = [
-  {key:'new', label:'New', color:'#94A3B8'},
-  {key:'contacted', label:'Contacted', color:'#1E90FF'},
-  {key:'qualified', label:'Qualified', color:'#6366F1'},
-  {key:'proposal', label:'Proposal', color:'#F59E0B'},
-  {key:'won', label:'Won', color:'#0E7A45'},
-  {key:'lost', label:'Lost', color:'#C0392B'},
+  {key:'new', label:'New'},
+  {key:'contacted', label:'Contacted'},
+  {key:'qualified', label:'Qualified'},
+  {key:'proposal', label:'Proposal'},
+  {key:'won', label:'Won'},
+  {key:'lost', label:'Lost'},
 ];
 
 function toast(msg, isError=false){
@@ -301,21 +235,6 @@ function escapeHtml(str){
   const d = document.createElement('div');
   d.textContent = str || '';
   return d.innerHTML;
-}
-function initials(name){
-  if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]||'')[0] + (parts[1]?parts[1][0]:'')).toUpperCase();
-}
-function avatarColor(name){
-  const palette = [
-    ['#EAF2FF','#0B5FCC'], ['#EEF0FE','#4F46E5'], ['#E7F8F0','#0E7A45'],
-    ['#FFF3E0','#B8720C'], ['#FDECEA','#B33636'], ['#F3E8FF','#7E22CE'],
-  ];
-  let hash = 0;
-  for (let i=0;i<(name||'').length;i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  const [bg, fg] = palette[Math.abs(hash) % palette.length];
-  return {bg, fg};
 }
 
 async function api(path, opts={}) {
@@ -333,10 +252,10 @@ async function checkStatus(){
   try {
     await api('/health');
     dot.className = 'dot live';
-    text.textContent = 'Connected to live API';
+    text.textContent = 'Connected to live API — this demo is fully functional';
   } catch(e) {
     dot.className = 'dot down';
-    text.textContent = 'API is waking up (free-tier hosting sleeps when idle)…';
+    text.textContent = 'API is waking up (free-tier hosting sleeps when idle) — retrying...';
     setTimeout(checkStatus, 4000);
   }
 }
@@ -353,44 +272,35 @@ async function loadLeads(){
   }
 }
 
-document.getElementById('searchInput').addEventListener('input', (e) => {
-  searchQuery = e.target.value.trim().toLowerCase();
-  renderBoard();
-});
-
 function renderBoard(){
   const board = document.getElementById('board');
-
-  const filtered = searchQuery
-    ? leads.filter(l => (l.name||'').toLowerCase().includes(searchQuery) || (l.company||'').toLowerCase().includes(searchQuery))
-    : leads;
-
-  const totalValue = leads.reduce((s,l) => s + (l.value||0), 0);
-  const qualifiedCount = leads.filter(l => ['qualified','won'].includes(l.stage)).length;
-  const automatedCount = leads.filter(l => l.source && l.source !== 'manual').length;
-  document.getElementById('statTotalLeads').textContent = leads.length;
-  document.getElementById('statPipelineValue').textContent = money(totalValue);
-  document.getElementById('statWon').textContent = qualifiedCount;
-  document.getElementById('statAutomated').textContent = automatedCount;
+  const statsWrap = document.getElementById('statsWrap');
 
   if (leads.length === 0) {
-    board.innerHTML = `<div class="empty-board">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v6M16 4v6"/></svg>
-      <div class="et">No leads yet</div>
-      <div class="ed">Add one manually, or submit the website contact form to see it appear here automatically.</div>
+    statsWrap.style.display = 'none';
+    board.innerHTML = `<div style="width:100%;padding:60px 20px;text-align:center;color:var(--muted);">
+      <div style="font-size:36px;margin-bottom:12px;">📋</div>
+      <div style="font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px;">No leads yet</div>
+      <div style="font-size:13.5px;">Add one manually, or submit the website contact form to see it appear here automatically.</div>
     </div>`;
     return;
   }
 
+  statsWrap.style.display = 'block';
+  const totalValue = leads.reduce((s,l) => s + (l.value||0), 0);
+  const wonLeads = leads.filter(l => l.stage === 'won' || (l.source === 'retail-billing' && l.stage === 'qualified'));
+  document.getElementById('statTotalLeads').textContent = leads.length;
+  document.getElementById('statPipelineValue').textContent = money(totalValue);
+  document.getElementById('statWon').textContent = wonLeads.length;
+
   board.innerHTML = STAGES.map(stage => {
-    const stageLeads = filtered.filter(l => l.stage === stage.key);
+    const stageLeads = leads.filter(l => l.stage === stage.key);
     const total = stageLeads.reduce((sum, l) => sum + (l.value || 0), 0);
     const cards = stageLeads.length === 0
-      ? `<div class="empty-col">${searchQuery ? 'No matches' : 'No leads here'}</div>`
-      : stageLeads.map(l => leadCardHtml(l)).join('');
+      ? `<div class="empty-col">No leads here</div>`
+      : stageLeads.map(l => leadCardHtml(l, stage.key)).join('');
     return `<div class="column">
       <div class="column-head">
-        <span class="sw" style="background:${stage.color};"></span>
         <span class="name">${stage.label}</span>
         <span class="count">${stageLeads.length}</span>
       </div>
@@ -400,37 +310,24 @@ function renderBoard(){
   }).join('');
 }
 
-function leadCardHtml(lead){
-  const sourceLabels = {manual:'Manual', 'retail-billing':'Billing', website:'Website'};
+function leadCardHtml(lead, currentStage){
+  const otherStages = STAGES.filter(s => s.key !== currentStage);
+  const moveButtons = otherStages.map(s =>
+    `<button onclick="event.stopPropagation(); moveLead(${lead.id}, '${s.key}')">${s.label}</button>`
+  ).join('');
+  const sourceLabels = {manual:'Added manually', 'retail-billing':'From Retail Billing', website:'From Website'};
   const sourceClass = lead.source || 'manual';
-  const sourceLabel = sourceLabels[sourceClass] || 'Manual';
-  const {bg, fg} = avatarColor(lead.name);
-  const otherStages = STAGES.filter(s => s.key !== lead.stage);
-  const stageOptions = otherStages.map(s => `<option value="${s.key}">Move to ${s.label}</option>`).join('');
-
+  const sourceLabel = sourceLabels[sourceClass] || 'Added manually';
   return `<div class="lead-card" onclick="openDetail(${lead.id})">
-    <div class="lc-top">
-      <div class="lc-avatar" style="background:${bg};color:${fg};">${initials(lead.name)}</div>
-      <div class="lc-info">
-        <div class="lname">${escapeHtml(lead.name)}</div>
-        ${lead.company ? `<div class="lcompany">${escapeHtml(lead.company)}</div>` : ''}
-      </div>
-    </div>
-    <div class="lc-meta">
-      <span class="lvalue">${lead.value ? money(lead.value) : ''}</span>
-      <span class="lsource ${sourceClass}">${sourceLabel}</span>
-    </div>
-    <div class="lc-move" onclick="event.stopPropagation();">
-      <select onchange="moveLead(${lead.id}, this.value); this.selectedIndex=0;">
-        <option value="" selected disabled>Move stage…</option>
-        ${stageOptions}
-      </select>
-    </div>
+    <div class="lname">${escapeHtml(lead.name)}</div>
+    ${lead.company ? `<div class="lcompany">${escapeHtml(lead.company)}</div>` : ''}
+    ${lead.value ? `<div class="lvalue">${money(lead.value)}</div>` : ''}
+    <span class="lsource ${sourceClass}">${sourceLabel}</span>
+    <div class="lmove">${moveButtons}</div>
   </div>`;
 }
 
 async function moveLead(id, newStage){
-  if (!newStage) return;
   try {
     await api('/leads/'+id, {method:'PATCH', body: JSON.stringify({stage:newStage})});
     toast('Lead moved to ' + newStage);
@@ -472,20 +369,13 @@ function openDetail(id){
   const lead = leads.find(l => l.id === id);
   if (!lead) return;
   currentDetailId = id;
-  const {bg, fg} = avatarColor(lead.name);
-  const avatarEl = document.getElementById('detail-avatar');
-  avatarEl.style.background = bg;
-  avatarEl.style.color = fg;
-  avatarEl.textContent = initials(lead.name);
   document.getElementById('detail-name').textContent = lead.name;
-
   const metaParts = [];
-  if (lead.company) metaParts.push(escapeHtml(lead.company));
-  if (lead.phone) metaParts.push(escapeHtml(lead.phone));
-  if (lead.email) metaParts.push(escapeHtml(lead.email));
+  if (lead.company) metaParts.push(lead.company);
+  if (lead.phone) metaParts.push(lead.phone);
+  if (lead.email) metaParts.push(lead.email);
   if (lead.value) metaParts.push(money(lead.value));
-  document.getElementById('detail-meta').innerHTML = `<div style="font-size:13px;color:var(--muted);margin-top:6px;">${metaParts.join(' · ')}</div>`;
-
+  document.getElementById('detail-meta').textContent = metaParts.join(' · ');
   renderActivities(lead.activities || []);
   openModal('detailOverlay');
 }
