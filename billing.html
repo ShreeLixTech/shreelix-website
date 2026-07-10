@@ -223,6 +223,8 @@
         <div id="gstGuideBox" style="display:none;margin-top:10px;padding:12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--muted);">
           This is a general reference, not tax advice — confirm exact rates for your products with a tax professional or the official GST portal.
         </div>
+        <label for="p-hsn">HSN/SAC code <span style="font-weight:400;color:var(--muted);">(optional)</span></label>
+        <input id="p-hsn" placeholder="e.g. 1006">
         <button class="btn" id="addProductBtn">Add to inventory</button>
 
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
@@ -295,6 +297,10 @@
           </div>
           <label for="c-notes">Notes (optional)</label>
           <input id="c-notes" placeholder="e.g. Delivery instructions">
+          <div style="margin-top:14px;display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="c-roundoff" checked style="width:auto;">
+            <label for="c-roundoff" style="margin:0;font-weight:500;color:var(--text);font-size:13.5px;">Round off total to nearest ₹1</label>
+          </div>
         </div>
       </div>
       <div class="card">
@@ -338,13 +344,17 @@
       <span style="display:none;color:#fff;font-weight:800;font-size:22px;font-family:'Poppins',sans-serif;align-items:center;justify-content:center;width:100%;height:100%;">S</span>
     </div>
     <h3 style="font-size:19px;margin-bottom:6px;">Welcome to ShreeLix Billing</h3>
-    <p style="font-size:13.5px;color:var(--muted);margin-bottom:20px;">Quick, no-password sign-in — just tell us a bit about your business so we can keep your usage saved.</p>
+    <p style="font-size:13.5px;color:var(--muted);margin-bottom:20px;">Quick, no-password sign-in — this also sets up your business details so your invoices look professional from bill #1.</p>
     <label>Business name *</label>
     <input id="reg-business" placeholder="e.g. Sharma Traders">
+    <label>Business address</label>
+    <input id="reg-address" placeholder="Shop no., street, city, PIN">
     <label>Your name</label>
     <input id="reg-contact" placeholder="Optional">
-    <label>Phone</label>
-    <input id="reg-phone" placeholder="Optional">
+    <label>Business phone</label>
+    <input id="reg-phone" placeholder="e.g. 9876543210">
+    <label>GSTIN <span style="font-weight:400;color:var(--muted);">(optional — add later if you don't have it yet)</span></label>
+    <input id="reg-gstin" placeholder="e.g. 27ABCDE1234F1Z5" style="text-transform:uppercase;">
     <div id="regError" style="color:var(--red);font-size:12.5px;margin-top:8px;"></div>
     <button class="btn full" id="regSubmitBtn" onclick="submitRegistration()">Start using ShreeLix Billing</button>
     <p style="font-size:11.5px;color:var(--muted);margin-top:12px;text-align:center;">By continuing, you agree that this is early-access software — see the notice at the top of the page.</p>
@@ -380,6 +390,27 @@
       <button onclick="closeCrossSell()" style="background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer;">&times;</button>
     </div>
     <div id="crossSellContent"></div>
+  </div>
+</div>
+
+<!-- RETURN / CREDIT NOTE MODAL -->
+<div class="overlay" id="returnOverlay" style="display:none;position:fixed;inset:0;background:rgba(11,31,58,0.6);z-index:210;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;">
+    <h3 style="font-size:18px;margin-bottom:6px;">Record a return</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">This creates a credit note against Bill #<span id="returnBillId"></span>.</p>
+    <label>Reason</label>
+    <input id="return-reason" placeholder="e.g. Damaged item, wrong size">
+    <label>Return amount (₹)</label>
+    <input id="return-amount" type="number" min="0" step="0.01">
+    <div style="margin-top:12px;display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="return-restock" checked style="width:auto;">
+      <label for="return-restock" style="margin:0;font-weight:500;color:var(--text);font-size:13.5px;">Add returned items back to inventory</label>
+    </div>
+    <div id="returnError" style="color:var(--red);font-size:12.5px;margin-top:8px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn secondary" style="margin-top:0;" onclick="closeReturnModal()">Cancel</button>
+      <button class="btn" style="margin-top:0;" id="returnSubmitBtn" onclick="submitReturn()">Record return</button>
+    </div>
   </div>
 </div>
 
@@ -487,16 +518,18 @@ document.getElementById('addProductBtn').addEventListener('click', async () => {
   const price = parseFloat(document.getElementById('p-price').value);
   const stock = parseInt(document.getElementById('p-stock').value || '0');
   const gstRate = parseFloat(document.getElementById('p-gst').value);
+  const hsnCode = document.getElementById('p-hsn').value.trim();
   if (!name || isNaN(price)) { toast('Enter a product name and price', true); return; }
 
   const btn = document.getElementById('addProductBtn');
   btn.disabled = true; btn.textContent = 'Adding…';
   try {
-    await api('/products', {method:'POST', body: JSON.stringify({name, price, stock_qty: stock, gst_rate: gstRate})});
+    await api('/products', {method:'POST', body: JSON.stringify({name, price, stock_qty: stock, gst_rate: gstRate, hsn_code: hsnCode || null})});
     toast('Product added');
     document.getElementById('p-name').value = '';
     document.getElementById('p-price').value = '';
     document.getElementById('p-stock').value = '';
+    document.getElementById('p-hsn').value = '';
     loadInventory();
   } catch(e) {
     toast(e.message, true);
@@ -603,11 +636,12 @@ document.getElementById('uploadExcelBtn').addEventListener('click', async () => 
       const stock = parseInt(r.stock_qty || r.stock || r.quantity || 0);
       const gstRate = parseFloat(r.gst_rate || r.gst || r.tax_rate);
       const finalGst = isNaN(gstRate) ? 18 : gstRate;
+      const hsnCode = r.hsn_code || r.hsn || r.hsn_sac || null;
       if (!name || isNaN(price)) { failed++; continue; }
 
       statusEl.textContent = `Uploading ${i+1} of ${normalizedRows.length}…`;
       try {
-        await api('/products', {method:'POST', body: JSON.stringify({name: String(name), price, stock_qty: stock, gst_rate: finalGst})});
+        await api('/products', {method:'POST', body: JSON.stringify({name: String(name), price, stock_qty: stock, gst_rate: finalGst, hsn_code: hsnCode})});
         success++;
       } catch(e) {
         failed++;
@@ -727,7 +761,10 @@ function updateTotal(){
   const finalTaxable = taxable - discount;
   const discountRatio = taxable > 0 ? (finalTaxable / taxable) : 1;
   const adjustedTax = tax * discountRatio;
-  const total = finalTaxable + adjustedTax;
+  const rawTotal = finalTaxable + adjustedTax;
+  const doRoundOff = document.getElementById('c-roundoff').checked;
+  const roundOffAmt = doRoundOff ? Math.round(rawTotal) - rawTotal : 0;
+  const total = doRoundOff ? Math.round(rawTotal) : rawTotal;
   document.getElementById('billTotal').textContent = money(total);
 
   const breakdownEl = document.getElementById('taxBreakdown');
@@ -743,14 +780,31 @@ function updateTotal(){
     rows += `<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>CGST</span><span>${money(adjustedTax/2)}</span></div>`;
     rows += `<div style="display:flex;justify-content:space-between;padding:3px 0;"><span>SGST</span><span>${money(adjustedTax/2)}</span></div>`;
   }
+  if (Math.abs(roundOffAmt) > 0.001) {
+    rows += `<div style="display:flex;justify-content:space-between;padding:3px 0;color:var(--muted);"><span>Round off</span><span>${roundOffAmt > 0 ? '+' : ''}${money(roundOffAmt)}</span></div>`;
+  }
   breakdownEl.innerHTML = rows;
+
+  const paymentMode = document.getElementById('c-payment-mode').value;
+  if (paymentMode === 'credit') {
+    const paidRaw = document.getElementById('c-amount-paid').value;
+    const paid = paidRaw === '' ? 0 : Math.min(parseFloat(paidRaw) || 0, total);
+    const due = total - paid;
+    breakdownEl.innerHTML += `
+      <div style="display:flex;justify-content:space-between;padding:6px 0 3px;margin-top:6px;border-top:1px dashed var(--border);font-weight:600;color:var(--green);"><span>Paying now</span><span>${money(paid)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:3px 0;font-weight:600;color:var(--red);"><span>Balance due</span><span>${money(due)}</span></div>
+    `;
+  }
 }
 document.getElementById('c-interstate').addEventListener('change', updateTotal);
 document.getElementById('c-discount').addEventListener('input', updateTotal);
+document.getElementById('c-roundoff').addEventListener('change', updateTotal);
 document.getElementById('c-payment-mode').addEventListener('change', () => {
   const isCredit = document.getElementById('c-payment-mode').value === 'credit';
   document.getElementById('creditAmountBox').style.display = isCredit ? 'block' : 'none';
+  updateTotal();
 });
+document.getElementById('c-amount-paid').addEventListener('input', updateTotal);
 
 document.getElementById('addLineBtn').addEventListener('click', addBillLine);
 
@@ -790,6 +844,7 @@ document.getElementById('createBillBtn').addEventListener('click', async () => {
       is_interstate: isInterstate,
       discount_amount: discountAmount,
       payment_mode: paymentMode,
+      round_off: document.getElementById('c-roundoff').checked,
       notes: notes || null,
     };
     if (paymentMode === 'credit' && amountPaidRaw !== '') {
@@ -878,10 +933,11 @@ function generateInvoicePDF(bill){
   doc.setFont('helvetica','bold'); doc.setFontSize(9);
   doc.setTextColor(...navy);
   doc.text('ITEM', 46, y);
-  doc.text('QTY', 265, y, {align:'right'});
-  doc.text('RATE', 320, y, {align:'right'});
+  if (isGstBill) doc.text('HSN', 240, y, {align:'right'});
+  doc.text('QTY', 278, y, {align:'right'});
+  doc.text('RATE', 325, y, {align:'right'});
   if (isGstBill) {
-    doc.text('TAXABLE', 385, y, {align:'right'});
+    doc.text('TAXABLE', 390, y, {align:'right'});
     doc.text('GST', 430, y, {align:'right'});
   }
   doc.text('AMOUNT', 549, y, {align:'right'});
@@ -892,10 +948,11 @@ function generateInvoicePDF(bill){
     doc.setTextColor(30,41,59);
     doc.text(item.product_name, 46, y);
     doc.setTextColor(...muted);
-    doc.text(String(item.quantity), 265, y, {align:'right'});
-    doc.text(item.unit_price.toLocaleString('en-IN'), 320, y, {align:'right'});
+    if (isGstBill) doc.text(item.hsn_code || '—', 240, y, {align:'right'});
+    doc.text(String(item.quantity), 278, y, {align:'right'});
+    doc.text(item.unit_price.toLocaleString('en-IN'), 325, y, {align:'right'});
     if (isGstBill) {
-      doc.text(item.taxable_value.toLocaleString('en-IN'), 385, y, {align:'right'});
+      doc.text(item.taxable_value.toLocaleString('en-IN'), 390, y, {align:'right'});
       doc.text(item.gst_rate + '%', 430, y, {align:'right'});
     }
     doc.setTextColor(30,41,59);
@@ -932,6 +989,14 @@ function generateInvoicePDF(bill){
       doc.text('Rs. '+bill.total_sgst.toLocaleString('en-IN'), 549, y, {align:'right'});
       y += 17;
     }
+  }
+
+  if (Math.abs(bill.round_off_amount || 0) > 0.001) {
+    doc.setTextColor(...muted);
+    doc.text('Round off', 430, y, {align:'right'});
+    const sign = bill.round_off_amount > 0 ? '+ ' : '− ';
+    doc.text(sign + 'Rs. ' + Math.abs(bill.round_off_amount).toFixed(2), 549, y, {align:'right'});
+    y += 17;
   }
 
   y += 6;
@@ -1003,7 +1068,10 @@ async function loadHistory(){
         <td class="num">${money(b.total_amount)}</td>
         <td>${paymentBadge}</td>
         <td style="color:var(--muted);font-size:13px;">${date}</td>
-        <td><button class="btn small secondary" onclick='downloadHistoryPdf(${JSON.stringify(b).replace(/'/g,"&#39;")})'>PDF</button></td>
+        <td style="white-space:nowrap;">
+          <button class="btn small secondary" onclick='downloadHistoryPdf(${JSON.stringify(b).replace(/'/g,"&#39;")})'>PDF</button>
+          <button class="btn small" style="background:var(--red);" onclick="openReturnModal(${b.id}, ${b.total_amount})">Return</button>
+        </td>
       </tr>`;
     }).join('');
     wrap.innerHTML = `<table>
@@ -1090,8 +1158,10 @@ function isRegistered(){
 
 async function submitRegistration(){
   const bizName = document.getElementById('reg-business').value.trim();
+  const bizAddress = document.getElementById('reg-address').value.trim();
   const contactName = document.getElementById('reg-contact').value.trim();
   const phone = document.getElementById('reg-phone').value.trim();
+  const gstin = document.getElementById('reg-gstin').value.trim().toUpperCase();
   if (!bizName) { document.getElementById('regError').textContent = 'Business name is required'; return; }
 
   const btn = document.getElementById('regSubmitBtn');
@@ -1101,6 +1171,18 @@ async function submitRegistration(){
       user_token: USER_TOKEN, business_name: bizName, contact_name: contactName || null, phone: phone || null, product: 'billing'
     })});
     localStorage.setItem('shreelix_registered', '1');
+
+    // Populate the business profile immediately — same info, saved once, used everywhere
+    localStorage.setItem('shreelix_business_name', bizName);
+    localStorage.setItem('shreelix_business_address', bizAddress);
+    localStorage.setItem('shreelix_business_phone', phone);
+    localStorage.setItem('shreelix_business_gstin', gstin);
+    // Reflect it in the Inventory tab's profile fields too, so it's visibly in sync
+    if (document.getElementById('biz-name')) document.getElementById('biz-name').value = bizName;
+    if (document.getElementById('biz-address')) document.getElementById('biz-address').value = bizAddress;
+    if (document.getElementById('biz-phone')) document.getElementById('biz-phone').value = phone;
+    if (document.getElementById('biz-gstin')) document.getElementById('biz-gstin').value = gstin;
+
     document.getElementById('registerOverlay').style.display = 'none';
   } catch(e) {
     document.getElementById('regError').textContent = "Couldn't connect — the server may be waking up. Try again in a few seconds.";
@@ -1112,6 +1194,15 @@ async function submitRegistration(){
 function showRegistrationIfNeeded(){
   if (!isRegistered()) {
     document.getElementById('registerOverlay').style.display = 'flex';
+    return;
+  }
+  // Safety net: someone registered before business-profile fields existed — prompt once to complete it
+  if (!localStorage.getItem('shreelix_business_name')) {
+    document.getElementById('reg-business').value = '';
+    const modal = document.getElementById('registerOverlay');
+    modal.querySelector('h3').textContent = 'Complete your business details';
+    modal.querySelector('p').textContent = "One more thing — we're missing your business details, which is why invoices show a placeholder name. Add them now so your invoices look right.";
+    modal.style.display = 'flex';
   }
 }
 
@@ -1216,6 +1307,42 @@ async function crossSellInterested(productName){
     toast('Please call/WhatsApp +91 88401 77216 directly', true);
   }
   closeCrossSell();
+}
+
+// ---------- Returns / Credit Notes ----------
+let returnBillId = null;
+function openReturnModal(billId, billTotal){
+  returnBillId = billId;
+  document.getElementById('returnBillId').textContent = billId;
+  document.getElementById('return-reason').value = '';
+  document.getElementById('return-amount').value = billTotal;
+  document.getElementById('return-restock').checked = true;
+  document.getElementById('returnError').textContent = '';
+  document.getElementById('returnOverlay').style.display = 'flex';
+}
+function closeReturnModal(){
+  document.getElementById('returnOverlay').style.display = 'none';
+}
+async function submitReturn(){
+  const reason = document.getElementById('return-reason').value.trim();
+  const amount = parseFloat(document.getElementById('return-amount').value);
+  const restock = document.getElementById('return-restock').checked;
+  if (!reason) { document.getElementById('returnError').textContent = 'Please enter a reason'; return; }
+  if (isNaN(amount) || amount <= 0) { document.getElementById('returnError').textContent = 'Enter a valid amount'; return; }
+
+  const btn = document.getElementById('returnSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Recording…';
+  try {
+    await api('/credit-notes', {method:'POST', body: JSON.stringify({bill_id: returnBillId, reason, amount, restock})});
+    toast('Return recorded');
+    closeReturnModal();
+    loadInventory();
+    loadDashboard();
+  } catch(e) {
+    document.getElementById('returnError').textContent = e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Record return';
+  }
 }
 
 checkStatus();
