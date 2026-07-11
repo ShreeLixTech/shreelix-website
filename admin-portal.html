@@ -43,7 +43,7 @@
   .err{color:var(--red);font-size:12.5px;margin-top:-4px;margin-bottom:10px;}
 
   .dashboard{display:none;padding:28px 0 60px;}
-  .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;}
+  .stat-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:24px;}
   @media(max-width:1100px){.stat-grid{grid-template-columns:repeat(3,1fr);}}
   @media(max-width:600px){.stat-grid{grid-template-columns:1fr 1fr;}}
   .stat-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
@@ -269,9 +269,16 @@ function renderStats(){
   const totalRevenue = allBills.reduce((s,b) => s + b.total_amount, 0);
   const totalDue = allBills.reduce((s,b) => s + (b.due_amount||0), 0);
   const paidUsers = allUsers.filter(u => u.subscription_status === 'paid').length;
+  const now = new Date();
+  const expiringSoon = allUsers.filter(u => {
+    if (u.subscription_status !== 'paid' || !u.subscription_expires_at) return false;
+    const daysLeft = (new Date(u.subscription_expires_at) - now) / (1000*60*60*24);
+    return daysLeft >= 0 && daysLeft <= 3;
+  }).length;
   const items = [
     ['Total Users', allUsers.length],
     ['Paid Subscribers', paidUsers],
+    ['Expiring ≤3 days', expiringSoon],
     ['Total Products', allProducts.length],
     ['Total Bills', allBills.length],
     ['Total Revenue', money(totalRevenue)],
@@ -287,8 +294,10 @@ function renderUsers(){
   const q = (document.getElementById('searchUsers').value || '').toLowerCase();
   const filtered = allUsers.filter(u => !q || u.business_name.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q));
   if (filtered.length === 0) { wrap.innerHTML = '<div class="empty">No users found.</div>'; return; }
-  wrap.innerHTML = '<table><thead><tr><th>Business</th><th>Address</th><th>GSTIN</th><th>Email</th><th>Phone</th><th>Usage</th><th>Status</th><th>Registered</th><th></th></tr></thead><tbody>' +
-    filtered.map(u => '<tr class="clickable" onclick="openDrill(\'' + u.user_token + '\')">' +
+  wrap.innerHTML = '<table><thead><tr><th>Business</th><th>Address</th><th>GSTIN</th><th>Email</th><th>Phone</th><th>Usage</th><th>Status</th><th>Expires</th><th>Registered</th><th></th></tr></thead><tbody>' +
+    filtered.map(u => {
+      const expiryInfo = formatExpiry(u);
+      return '<tr class="clickable" onclick="openDrill(\'' + u.user_token + '\')">' +
       '<td><b>' + escapeHtml(u.business_name) + '</b></td>' +
       '<td>' + escapeHtml(u.business_address||'—') + '</td>' +
       '<td>' + escapeHtml(u.business_gstin||'—') + '</td>' +
@@ -296,17 +305,31 @@ function renderUsers(){
       '<td>' + escapeHtml(u.phone||'—') + '</td>' +
       '<td>' + u.tokens_used + ' / 100</td>' +
       '<td><span class="pill ' + u.subscription_status + '">' + u.subscription_status + '</span></td>' +
+      '<td>' + expiryInfo + '</td>' +
       '<td>' + new Date(u.created_at).toLocaleDateString('en-IN') + '</td>' +
-      '<td>' + (u.subscription_status === 'free'
+      '<td style="display:flex;gap:6px;">' + (u.subscription_status === 'free'
         ? '<button class="btn small" onclick="event.stopPropagation();upgradeUser(' + u.id + ')">Mark Paid</button>'
-        : '<button class="btn small" style="background:var(--muted);" onclick="event.stopPropagation();downgradeUser(' + u.id + ')">Mark Free</button>') + '</td>' +
-    '</tr>').join('') + '</tbody></table>';
+        : '<button class="btn small" onclick="event.stopPropagation();renewUser(' + u.id + ')">Renew +30d</button>' +
+          '<button class="btn small" style="background:var(--muted);" onclick="event.stopPropagation();downgradeUser(' + u.id + ')">Mark Free</button>') + '</td>' +
+    '</tr>';
+    }).join('') + '</tbody></table>';
+}
+function formatExpiry(u){
+  if (u.subscription_status !== 'paid' || !u.subscription_expires_at) return '—';
+  const expiry = new Date(u.subscription_expires_at);
+  const daysLeft = Math.ceil((expiry - new Date()) / (1000*60*60*24));
+  const dateStr = expiry.toLocaleDateString('en-IN');
+  if (daysLeft <= 3) return '<span style="color:var(--red);font-weight:600;">' + dateStr + ' (' + daysLeft + 'd)</span>';
+  return dateStr + ' (' + daysLeft + 'd left)';
 }
 async function upgradeUser(id){
   try { await api('/admin/users/' + id + '/subscription?key=' + encodeURIComponent(ADMIN_KEY), {method:'PATCH', body: JSON.stringify({subscription_status:'paid'})}); loadAll(); } catch(e) {}
 }
 async function downgradeUser(id){
   try { await api('/admin/users/' + id + '/subscription?key=' + encodeURIComponent(ADMIN_KEY), {method:'PATCH', body: JSON.stringify({subscription_status:'free'})}); loadAll(); } catch(e) {}
+}
+async function renewUser(id){
+  try { await api('/admin/users/' + id + '/renew?key=' + encodeURIComponent(ADMIN_KEY), {method:'POST'}); loadAll(); } catch(e) {}
 }
 
 function renderProducts(){
