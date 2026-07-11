@@ -519,7 +519,7 @@ function escapeHtml(str){
 }
 
 document.getElementById('addProductBtn').addEventListener('click', async () => {
-  if (!consumeToken()) return;
+  if (!(await consumeToken())) return;
   const name = document.getElementById('p-name').value.trim();
   const price = parseFloat(document.getElementById('p-price').value);
   const stock = parseInt(document.getElementById('p-stock').value || '0');
@@ -834,7 +834,7 @@ document.getElementById('c-amount-paid').addEventListener('input', updateTotal);
 document.getElementById('addLineBtn').addEventListener('click', addBillLine);
 
 document.getElementById('createBillBtn').addEventListener('click', async () => {
-  if (!consumeToken()) return;
+  if (!(await consumeToken())) return;
   const items = billLines.filter(l => l.product_id).map(l => ({product_id: parseInt(l.product_id), quantity: l.quantity}));
   if (items.length === 0) { toast('Add at least one item to the bill', true); return; }
 
@@ -1268,6 +1268,8 @@ async function handleGoogleCredential(response){
       // Returning user — restore their real saved profile from the server, not blanks
       const u = result.user;
       applyBusinessProfileLocally(u.business_name, u.business_address, u.phone, u.business_gstin);
+      cachedTokensUsed = u.tokens_used;
+      updateTokenBadge();
       loadInventory();
       loadDashboard();
     }
@@ -1321,6 +1323,8 @@ async function submitBusinessSetup(){
     USER_TOKEN = result.owner_token;
     localStorage.setItem('shreelix_user_token', USER_TOKEN);
     applyBusinessProfileLocally(bizName, bizAddress, phone, gstin);
+    cachedTokensUsed = result.user.tokens_used;
+    updateTokenBadge();
     document.getElementById('businessSetupOverlay').style.display = 'none';
     loadInventory();
     loadDashboard();
@@ -1338,31 +1342,41 @@ function showSignInIfNeeded(){
   }
 }
 
-// ---------- Token / Free-Usage System ----------
+// ---------- Token / Free-Usage System (server is the source of truth, not localStorage) ----------
 const FREE_TOKEN_LIMIT = 100;
-const TOKEN_KEY = 'shreelix_tokens_used';
+let cachedTokensUsed = 0; // just for display between server calls — never used to decide access
 
-function getTokensUsed(){
-  return parseInt(localStorage.getItem(TOKEN_KEY) || '0');
-}
 function getTokensLeft(){
-  return Math.max(0, FREE_TOKEN_LIMIT - getTokensUsed());
+  return Math.max(0, FREE_TOKEN_LIMIT - cachedTokensUsed);
 }
-function consumeToken(){
-  const used = getTokensUsed();
-  if (used >= FREE_TOKEN_LIMIT) {
-    document.getElementById('paywallOverlay').style.display = 'flex';
+
+async function consumeToken(){
+  if (!isSignedIn()) return false;
+  try {
+    const user = await api('/users/track?user_token=' + encodeURIComponent(USER_TOKEN), {method:'POST'});
+    cachedTokensUsed = user.tokens_used;
+    updateTokenBadge();
+    maybeShowCrossSell();
+    return true;
+  } catch(e) {
+    if (e.message && e.message.includes('credits used up')) {
+      document.getElementById('paywallOverlay').style.display = 'flex';
+    } else {
+      toast("Couldn't reach the server — please try again", true);
+    }
     return false;
   }
-  localStorage.setItem(TOKEN_KEY, String(used + 1));
-  updateTokenBadge();
-  maybeShowCrossSell();
-  // Track server-side too, for the admin portal — fire and forget, doesn't block the UI
-  if (isSignedIn()) {
-    api('/users/track?user_token=' + encodeURIComponent(USER_TOKEN), {method:'POST'}).catch(()=>{});
-  }
-  return true;
 }
+
+async function refreshTokenStatus(){
+  if (!isSignedIn()) return;
+  try {
+    const user = await api('/users/me?user_token=' + encodeURIComponent(USER_TOKEN));
+    cachedTokensUsed = user.tokens_used;
+    updateTokenBadge();
+  } catch(e) { /* non-critical — badge just won't update this cycle */ }
+}
+
 function updateTokenBadge(){
   const badge = document.getElementById('tokenBadge');
   if (badge) badge.textContent = getTokensLeft() + ' free credits left';
@@ -1392,12 +1406,10 @@ const CROSS_SELL_PRODUCTS = [
 let crossSellIndex = 0;
 
 function maybeShowCrossSell(){
-  const used = getTokensUsed();
-  // TEMP (testing): lowered from 50%/90% of 100 to just 3 and 8 actions, so you can verify this works without 50+ clicks.
-  // Once confirmed working, change these back to Math.floor(FREE_TOKEN_LIMIT*0.5) and *0.9.
+  const used = cachedTokensUsed;
   const thresholds = [
-    {value: 3, key: 'shreelix_crosssell_shown_50'},
-    {value: 8, key: 'shreelix_crosssell_shown_90'},
+    {value: Math.floor(FREE_TOKEN_LIMIT * 0.5), key: 'shreelix_crosssell_shown_50'},
+    {value: Math.floor(FREE_TOKEN_LIMIT * 0.9), key: 'shreelix_crosssell_shown_90'},
   ];
   for (const t of thresholds) {
     if (used >= t.value && !localStorage.getItem(t.key)) {
@@ -1488,6 +1500,7 @@ checkStatus();
 if (isSignedIn()) {
   loadInventory();
   loadDashboard();
+  refreshTokenStatus();
 }
 updateTokenBadge();
 showSignInIfNeeded();
