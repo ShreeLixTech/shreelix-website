@@ -11,13 +11,13 @@
     --navy:#0B1F3A; --navy-soft:#132A4D; --blue:#1E90FF; --blue-deep:#0B5FCC;
     --amber:#F59E0B; --bg:#F6F8FB; --card:#FFFFFF; --text:#1E293B;
     --muted:#64748B; --border:#E3E8F0; --green:#0E7A45; --green-bg:#E7F8F0;
-    --red:#C0392B; --red-bg:#FDECEA;
+    --red:#C0392B; --red-bg:#FDECEA; --indigo:#6366F1; --indigo-bg:#EEF0FE;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
   h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--navy);}
   a{color:inherit;text-decoration:none;}
-  .wrap{max-width:1200px;margin:0 auto;padding:0 24px;}
+  .wrap{max-width:1400px;margin:0 auto;padding:0 24px;}
   button,input{font-family:'Inter',sans-serif;}
 
   nav{background:var(--navy);padding:16px 0;}
@@ -25,44 +25,69 @@
   .brand{display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-weight:700;font-size:18px;color:#fff;}
   .brand .mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;}
   .badge-admin{background:rgba(245,158,11,0.15);color:var(--amber);font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;}
+  .nav-right{display:flex;align-items:center;gap:14px;}
+  .signout-link{color:rgba(255,255,255,0.65);font-size:12.5px;cursor:pointer;}
+  .signout-link:hover{color:#fff;}
 
   .login-screen{min-height:80vh;display:flex;align-items:center;justify-content:center;padding:20px;}
   .login-card{background:#fff;border-radius:16px;padding:36px;max-width:380px;width:100%;box-shadow:0 10px 40px rgba(11,31,58,0.08);}
   .login-card h2{font-size:20px;margin-bottom:8px;}
   .login-card p{font-size:13.5px;color:var(--muted);margin-bottom:20px;}
-  input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:12px;}
-  input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue);}
+  input,select{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:12px;}
+  input:focus,select:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:var(--blue);}
   .btn{background:var(--navy);color:#fff;padding:11px 20px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer;width:100%;}
   .btn:hover{background:var(--navy-soft);}
   .btn:disabled{opacity:0.5;cursor:not-allowed;}
   .btn.small{width:auto;padding:6px 12px;font-size:12px;}
+  .btn.secondary{background:transparent;border:1.5px solid var(--border);color:var(--navy);}
   .err{color:var(--red);font-size:12.5px;margin-top:-4px;margin-bottom:10px;}
 
-  .dashboard{display:none;padding:32px 0 60px;}
-  .stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px;}
-  @media(max-width:900px){.stat-grid{grid-template-columns:1fr 1fr 1fr;}}
-  @media(max-width:560px){.stat-grid{grid-template-columns:1fr 1fr;}}
-  .stat-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
-  .stat-card .slabel{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:6px;}
-  .stat-card .svalue{font-size:24px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;}
+  .dashboard{display:none;padding:28px 0 60px;}
+  .stat-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;}
+  @media(max-width:1100px){.stat-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:600px){.stat-grid{grid-template-columns:1fr 1fr;}}
+  .stat-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+  .stat-card .slabel{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;margin-bottom:5px;}
+  .stat-card .svalue{font-size:19px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;}
 
-  .tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--border);}
-  .tab{padding:11px 16px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;}
+  .tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);overflow-x:auto;}
+  .tab{padding:10px 14px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;}
   .tab.active{color:var(--navy);border-bottom-color:var(--blue);}
   .panel{display:none;}
   .panel.active{display:block;}
 
-  .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:22px;}
-  table{width:100%;border-collapse:collapse;font-size:13.5px;}
-  th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
-  td{padding:12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px;}
+  .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .card-head h3{font-size:15px;}
+  .search-box{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;width:220px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.03em;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+  td{padding:10px;border-bottom:1px solid var(--border);white-space:nowrap;}
   tr:last-child td{border-bottom:none;}
-  .table-scroll{overflow-x:auto;}
-  .pill{display:inline-flex;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;}
+  tr.clickable{cursor:pointer;}
+  tr.clickable:hover{background:var(--bg);}
+  .table-scroll{overflow-x:auto;max-height:560px;overflow-y:auto;}
+  .pill{display:inline-flex;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:999px;}
   .pill.free{background:#EEF2F7;color:var(--muted);}
   .pill.paid{background:var(--green-bg);color:var(--green);}
+  .pill.due{background:var(--red-bg);color:var(--red);}
+  .pill.settled{background:var(--green-bg);color:var(--green);}
   .empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13.5px;}
-  .refresh-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .refresh-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+
+  .overlay{display:none;position:fixed;inset:0;background:rgba(11,31,58,0.6);z-index:100;align-items:center;justify-content:center;padding:20px;}
+  .overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:16px;padding:0;max-width:900px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;}
+  .modal-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+  .modal-close{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;}
+  .modal-body{padding:20px 24px;overflow-y:auto;}
+  .drill-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+  @media(max-width:600px){.drill-stats{grid-template-columns:1fr 1fr;}}
+  .drill-stat{background:var(--bg);border-radius:10px;padding:12px 14px;}
+  .drill-stat .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+  .drill-stat .v{font-size:17px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;}
+  .drill-section-title{font-size:13px;font-weight:700;color:var(--navy);margin:18px 0 8px;}
 </style>
 </head>
 <body>
@@ -70,14 +95,17 @@
 <nav>
   <div class="wrap">
     <div class="brand"><span class="mark">S</span> ShreeLix</div>
-    <span class="badge-admin">ADMIN PORTAL</span>
+    <div class="nav-right">
+      <span class="badge-admin">ADMIN PORTAL</span>
+      <span class="signout-link" onclick="adminSignOut()">Sign out</span>
+    </div>
   </div>
 </nav>
 
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <h2>Admin sign-in</h2>
-    <p>Enter your admin key to view registered users, leads, and usage.</p>
+    <p>Enter your admin key to view everything — users, inventory, bills, returns, and leads.</p>
     <input type="password" id="adminKeyInput" placeholder="Admin key" onkeydown="if(event.key==='Enter')doLogin()">
     <div class="err" id="loginError"></div>
     <button class="btn" onclick="doLogin()" id="loginBtn">Sign in</button>
@@ -88,33 +116,80 @@
   <div class="wrap">
     <div class="refresh-row">
       <h1 style="font-size:22px;">Overview</h1>
-      <button class="btn small" onclick="loadAll()">Refresh</button>
+      <button class="btn small" onclick="loadAll()">Refresh all</button>
     </div>
 
     <div class="stat-grid" id="statGrid"></div>
 
     <div class="tabs">
-      <div class="tab active" data-tab="users">Registered Users</div>
-      <div class="tab" data-tab="leads">Leads & Requests</div>
+      <div class="tab active" data-tab="users">Users</div>
+      <div class="tab" data-tab="products">Products</div>
+      <div class="tab" data-tab="bills">Bills</div>
+      <div class="tab" data-tab="returns">Returns</div>
+      <div class="tab" data-tab="leads">Leads</div>
     </div>
 
     <div class="panel active" id="panel-users">
       <div class="card">
+        <div class="card-head">
+          <h3>Registered users</h3>
+          <input class="search-box" id="searchUsers" placeholder="Search business or email…" oninput="renderUsers()">
+        </div>
         <div class="table-scroll" id="usersTableWrap"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-products">
+      <div class="card">
+        <div class="card-head">
+          <h3>All products (every business)</h3>
+          <input class="search-box" id="searchProducts" placeholder="Search product or business…" oninput="renderProducts()">
+        </div>
+        <div class="table-scroll" id="productsTableWrap"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-bills">
+      <div class="card">
+        <div class="card-head">
+          <h3>All bills (every business)</h3>
+          <input class="search-box" id="searchBills" placeholder="Search customer or business…" oninput="renderBills()">
+        </div>
+        <div class="table-scroll" id="billsTableWrap"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-returns">
+      <div class="card">
+        <h3 style="margin-bottom:14px;">All returns / credit notes</h3>
+        <div class="table-scroll" id="returnsTableWrap"><div class="empty">Loading…</div></div>
       </div>
     </div>
 
     <div class="panel" id="panel-leads">
       <div class="card">
+        <h3 style="margin-bottom:14px;">All leads</h3>
         <div class="table-scroll" id="leadsTableWrap"><div class="empty">Loading…</div></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- USER DRILL-DOWN MODAL -->
+<div class="overlay" id="drillOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="drillTitle" style="font-size:17px;">Business detail</h3>
+      <button class="modal-close" onclick="closeDrill()">&times;</button>
+    </div>
+    <div class="modal-body" id="drillBody"></div>
+  </div>
+</div>
+
 <script>
 const API = "https://retail-billing-system-hmq4.onrender.com";
 let ADMIN_KEY = '';
+let allUsers = [], allProducts = [], allBills = [], allReturns = [], allLeads = [];
 
 function escapeHtml(str){
   const d = document.createElement('div');
@@ -150,6 +225,10 @@ async function doLogin(){
     btn.disabled = false; btn.textContent = 'Sign in';
   }
 }
+function adminSignOut(){
+  sessionStorage.removeItem('shreelix_admin_key');
+  location.reload();
+}
 
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -160,105 +239,183 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-async function loadAll(){
-  try {
-    const summary = await api('/admin/summary?key=' + encodeURIComponent(ADMIN_KEY));
-    renderStats(summary);
-  } catch(e) {}
-  loadUsers();
-  loadLeads();
+function businessNameFor(ownerToken){
+  const u = allUsers.find(u => u.user_token === ownerToken);
+  return u ? u.business_name : (ownerToken ? '(unknown business)' : '—');
 }
 
-function renderStats(s){
-  const grid = document.getElementById('statGrid');
+async function loadAll(){
+  try {
+    const [users, products, bills, returns, leads] = await Promise.all([
+      api('/admin/users?key=' + encodeURIComponent(ADMIN_KEY)),
+      api('/products'),
+      api('/bills'),
+      api('/credit-notes'),
+      api('/leads'),
+    ]);
+    allUsers = users; allProducts = products; allBills = bills; allReturns = returns; allLeads = leads;
+    renderStats();
+    renderUsers();
+    renderProducts();
+    renderBills();
+    renderReturns();
+    renderLeads();
+  } catch(e) {
+    document.getElementById('statGrid').innerHTML = `<div class="empty">Couldn't load data — check your connection or the API may be waking up.</div>`;
+  }
+}
+
+function renderStats(){
+  const totalRevenue = allBills.reduce((s,b) => s + b.total_amount, 0);
+  const totalDue = allBills.reduce((s,b) => s + (b.due_amount||0), 0);
+  const paidUsers = allUsers.filter(u => u.subscription_status === 'paid').length;
   const items = [
-    ['Total Users', s.total_users],
-    ['Paid Subscribers', s.paid_users],
-    ['Free Users', s.free_users],
-    ['Total Leads', s.total_leads],
-    ['Total Revenue', money(s.total_revenue)],
+    ['Total Users', allUsers.length],
+    ['Paid Subscribers', paidUsers],
+    ['Total Products', allProducts.length],
+    ['Total Bills', allBills.length],
+    ['Total Revenue', money(totalRevenue)],
+    ['Outstanding Dues', money(totalDue)],
   ];
-  grid.innerHTML = items.map(([label,val]) => `
-    <div class="stat-card">
-      <div class="slabel">${label}</div>
-      <div class="svalue">${val}</div>
-    </div>
+  document.getElementById('statGrid').innerHTML = items.map(([label,val]) => `
+    <div class="stat-card"><div class="slabel">${label}</div><div class="svalue">${val}</div></div>
   `).join('');
 }
 
-async function loadUsers(){
+function renderUsers(){
   const wrap = document.getElementById('usersTableWrap');
-  try {
-    const users = await api('/admin/users?key=' + encodeURIComponent(ADMIN_KEY));
-    if (users.length === 0) {
-      wrap.innerHTML = `<div class="empty">No registered users yet.</div>`;
-      return;
-    }
-    wrap.innerHTML = `<table>
-      <thead><tr><th>Business</th><th>Contact</th><th>Phone</th><th>Product</th><th>Usage</th><th>Status</th><th>Registered</th><th>Last active</th><th></th></tr></thead>
-      <tbody>${users.map(u => `
-        <tr>
-          <td><b>${escapeHtml(u.business_name)}</b></td>
-          <td>${escapeHtml(u.contact_name||'—')}</td>
-          <td>${escapeHtml(u.phone||'—')}</td>
-          <td>${escapeHtml(u.product)}</td>
-          <td>${u.tokens_used} / 100</td>
-          <td><span class="pill ${u.subscription_status}">${u.subscription_status}</span></td>
-          <td>${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
-          <td>${new Date(u.last_active_at).toLocaleDateString('en-IN')}</td>
-          <td>${u.subscription_status === 'free'
-            ? `<button class="btn small" onclick="upgradeUser(${u.id})">Mark Paid</button>`
-            : `<button class="btn small" style="background:var(--muted);" onclick="downgradeUser(${u.id})">Mark Free</button>`}</td>
-        </tr>
-      `).join('')}</tbody>
-    </table>`;
-  } catch(e) {
-    wrap.innerHTML = `<div class="empty">Couldn't load users.</div>`;
-  }
+  const q = (document.getElementById('searchUsers').value || '').toLowerCase();
+  const filtered = allUsers.filter(u => !q || u.business_name.toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q));
+  if (filtered.length === 0) { wrap.innerHTML = '<div class="empty">No users found.</div>'; return; }
+  wrap.innerHTML = '<table><thead><tr><th>Business</th><th>Address</th><th>GSTIN</th><th>Email</th><th>Phone</th><th>Usage</th><th>Status</th><th>Registered</th><th></th></tr></thead><tbody>' +
+    filtered.map(u => '<tr class="clickable" onclick="openDrill(\'' + u.user_token + '\')">' +
+      '<td><b>' + escapeHtml(u.business_name) + '</b></td>' +
+      '<td>' + escapeHtml(u.business_address||'—') + '</td>' +
+      '<td>' + escapeHtml(u.business_gstin||'—') + '</td>' +
+      '<td>' + escapeHtml(u.email||'—') + '</td>' +
+      '<td>' + escapeHtml(u.phone||'—') + '</td>' +
+      '<td>' + u.tokens_used + ' / 100</td>' +
+      '<td><span class="pill ' + u.subscription_status + '">' + u.subscription_status + '</span></td>' +
+      '<td>' + new Date(u.created_at).toLocaleDateString('en-IN') + '</td>' +
+      '<td>' + (u.subscription_status === 'free'
+        ? '<button class="btn small" onclick="event.stopPropagation();upgradeUser(' + u.id + ')">Mark Paid</button>'
+        : '<button class="btn small" style="background:var(--muted);" onclick="event.stopPropagation();downgradeUser(' + u.id + ')">Mark Free</button>') + '</td>' +
+    '</tr>').join('') + '</tbody></table>';
 }
-
 async function upgradeUser(id){
-  try {
-    await api(`/admin/users/${id}/subscription?key=${encodeURIComponent(ADMIN_KEY)}`, {method:'PATCH', body: JSON.stringify({subscription_status:'paid'})});
-    loadUsers();
-  } catch(e) {}
+  try { await api('/admin/users/' + id + '/subscription?key=' + encodeURIComponent(ADMIN_KEY), {method:'PATCH', body: JSON.stringify({subscription_status:'paid'})}); loadAll(); } catch(e) {}
 }
 async function downgradeUser(id){
-  try {
-    await api(`/admin/users/${id}/subscription?key=${encodeURIComponent(ADMIN_KEY)}`, {method:'PATCH', body: JSON.stringify({subscription_status:'free'})});
-    loadUsers();
-  } catch(e) {}
+  try { await api('/admin/users/' + id + '/subscription?key=' + encodeURIComponent(ADMIN_KEY), {method:'PATCH', body: JSON.stringify({subscription_status:'free'})}); loadAll(); } catch(e) {}
 }
 
-async function loadLeads(){
+function renderProducts(){
+  const wrap = document.getElementById('productsTableWrap');
+  const q = (document.getElementById('searchProducts').value || '').toLowerCase();
+  const filtered = allProducts.filter(p => !q || p.name.toLowerCase().includes(q) || businessNameFor(p.owner_token).toLowerCase().includes(q));
+  if (filtered.length === 0) { wrap.innerHTML = '<div class="empty">No products found.</div>'; return; }
+  wrap.innerHTML = '<table><thead><tr><th>Product</th><th>Business</th><th class="num">Price</th><th>GST</th><th>HSN</th><th>Stock</th></tr></thead><tbody>' +
+    filtered.map(p => '<tr>' +
+      '<td><b>' + escapeHtml(p.name) + '</b></td>' +
+      '<td>' + escapeHtml(businessNameFor(p.owner_token)) + '</td>' +
+      '<td>' + money(p.price) + '</td>' +
+      '<td>' + p.gst_rate + '%</td>' +
+      '<td>' + escapeHtml(p.hsn_code||'—') + '</td>' +
+      '<td>' + p.stock_qty + '</td>' +
+    '</tr>').join('') + '</tbody></table>';
+}
+
+function renderBills(){
+  const wrap = document.getElementById('billsTableWrap');
+  const q = (document.getElementById('searchBills').value || '').toLowerCase();
+  const filtered = allBills.filter(b => !q || (b.customer_name||'').toLowerCase().includes(q) || (b.business_name||'').toLowerCase().includes(q));
+  if (filtered.length === 0) { wrap.innerHTML = '<div class="empty">No bills found.</div>'; return; }
+  wrap.innerHTML = '<table><thead><tr><th>Bill</th><th>Business</th><th>Customer</th><th class="num">Subtotal</th><th class="num">Tax</th><th class="num">Total</th><th>Payment</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+    filtered.map(b => {
+      const tax = (b.total_cgst||0)+(b.total_sgst||0)+(b.total_igst||0);
+      const statusPill = b.due_amount > 0 ? '<span class="pill due">Due ' + money(b.due_amount) + '</span>' : '<span class="pill settled">Settled</span>';
+      return '<tr>' +
+        '<td>#' + b.id + '</td>' +
+        '<td>' + escapeHtml(b.business_name||'—') + '</td>' +
+        '<td>' + escapeHtml(b.customer_name||'Walk-in') + '</td>' +
+        '<td>' + money(b.subtotal) + '</td>' +
+        '<td>' + money(tax) + '</td>' +
+        '<td><b>' + money(b.total_amount) + '</b></td>' +
+        '<td>' + escapeHtml((b.payment_mode||'cash')) + '</td>' +
+        '<td>' + statusPill + '</td>' +
+        '<td>' + new Date(b.created_at).toLocaleDateString('en-IN') + '</td>' +
+      '</tr>';
+    }).join('') + '</tbody></table>';
+}
+
+function renderReturns(){
+  const wrap = document.getElementById('returnsTableWrap');
+  if (allReturns.length === 0) { wrap.innerHTML = '<div class="empty">No returns recorded.</div>'; return; }
+  wrap.innerHTML = '<table><thead><tr><th>Bill</th><th>Reason</th><th class="num">Amount</th><th>Restocked</th><th>Date</th></tr></thead><tbody>' +
+    allReturns.map(r => '<tr>' +
+      '<td>#' + r.bill_id + '</td>' +
+      '<td>' + escapeHtml(r.reason) + '</td>' +
+      '<td>' + money(r.amount) + '</td>' +
+      '<td>' + (r.restock === 'yes' ? 'Yes' : 'No') + '</td>' +
+      '<td>' + new Date(r.created_at).toLocaleDateString('en-IN') + '</td>' +
+    '</tr>').join('') + '</tbody></table>';
+}
+
+function renderLeads(){
   const wrap = document.getElementById('leadsTableWrap');
-  try {
-    const leads = await api('/leads');
-    if (leads.length === 0) {
-      wrap.innerHTML = `<div class="empty">No leads yet.</div>`;
-      return;
-    }
-    wrap.innerHTML = `<table>
-      <thead><tr><th>Name</th><th>Company</th><th>Phone</th><th>Email</th><th>Stage</th><th>Source</th><th>Value</th><th>Created</th></tr></thead>
-      <tbody>${leads.map(l => `
-        <tr>
-          <td><b>${escapeHtml(l.name)}</b></td>
-          <td>${escapeHtml(l.company||'—')}</td>
-          <td>${escapeHtml(l.phone||'—')}</td>
-          <td>${escapeHtml(l.email||'—')}</td>
-          <td>${escapeHtml(l.stage)}</td>
-          <td>${escapeHtml(l.source||'manual')}</td>
-          <td>${money(l.value)}</td>
-          <td>${new Date(l.created_at).toLocaleDateString('en-IN')}</td>
-        </tr>
-      `).join('')}</tbody>
-    </table>`;
-  } catch(e) {
-    wrap.innerHTML = `<div class="empty">Couldn't load leads.</div>`;
-  }
+  if (allLeads.length === 0) { wrap.innerHTML = '<div class="empty">No leads yet.</div>'; return; }
+  wrap.innerHTML = '<table><thead><tr><th>Name</th><th>Company</th><th>Phone</th><th>Email</th><th>Stage</th><th>Source</th><th class="num">Value</th><th>Created</th></tr></thead><tbody>' +
+    allLeads.map(l => '<tr>' +
+      '<td><b>' + escapeHtml(l.name) + '</b></td>' +
+      '<td>' + escapeHtml(l.company||'—') + '</td>' +
+      '<td>' + escapeHtml(l.phone||'—') + '</td>' +
+      '<td>' + escapeHtml(l.email||'—') + '</td>' +
+      '<td>' + escapeHtml(l.stage) + '</td>' +
+      '<td>' + escapeHtml(l.source||'manual') + '</td>' +
+      '<td>' + money(l.value) + '</td>' +
+      '<td>' + new Date(l.created_at).toLocaleDateString('en-IN') + '</td>' +
+    '</tr>').join('') + '</tbody></table>';
 }
 
-// Auto-login if key already in this session
+function openDrill(ownerToken){
+  const user = allUsers.find(u => u.user_token === ownerToken);
+  if (!user) return;
+  document.getElementById('drillTitle').textContent = user.business_name;
+
+  const products = allProducts.filter(p => p.owner_token === ownerToken);
+  const bills = allBills.filter(b => b.business_name === user.business_name);
+  const revenue = bills.reduce((s,b) => s + b.total_amount, 0);
+  const due = bills.reduce((s,b) => s + (b.due_amount||0), 0);
+
+  let html = '<div class="drill-stats">' +
+    '<div class="drill-stat"><div class="l">Products</div><div class="v">' + products.length + '</div></div>' +
+    '<div class="drill-stat"><div class="l">Bills</div><div class="v">' + bills.length + '</div></div>' +
+    '<div class="drill-stat"><div class="l">Revenue</div><div class="v">' + money(revenue) + '</div></div>' +
+    '<div class="drill-stat"><div class="l">Outstanding</div><div class="v">' + money(due) + '</div></div>' +
+  '</div>';
+  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">' +
+    escapeHtml(user.business_address||'No address on file') + ' &nbsp;·&nbsp; GSTIN: ' + escapeHtml(user.business_gstin||'—') +
+    ' &nbsp;·&nbsp; ' + escapeHtml(user.email||'No email') + ' &nbsp;·&nbsp; ' + escapeHtml(user.phone||'No phone') + '</div>';
+
+  html += '<div class="drill-section-title">Products (' + products.length + ')</div>';
+  html += products.length === 0 ? '<div class="empty">No products.</div>' :
+    '<table><thead><tr><th>Name</th><th class="num">Price</th><th>Stock</th></tr></thead><tbody>' +
+    products.map(p => '<tr><td>' + escapeHtml(p.name) + '</td><td>' + money(p.price) + '</td><td>' + p.stock_qty + '</td></tr>').join('') +
+    '</tbody></table>';
+
+  html += '<div class="drill-section-title">Bills (' + bills.length + ')</div>';
+  html += bills.length === 0 ? '<div class="empty">No bills.</div>' :
+    '<table><thead><tr><th>Bill</th><th>Customer</th><th class="num">Total</th><th>Status</th><th>Date</th></tr></thead><tbody>' +
+    bills.map(b => '<tr><td>#' + b.id + '</td><td>' + escapeHtml(b.customer_name||'Walk-in') + '</td><td>' + money(b.total_amount) + '</td><td>' + (b.due_amount>0?'Due':'Settled') + '</td><td>' + new Date(b.created_at).toLocaleDateString('en-IN') + '</td></tr>').join('') +
+    '</tbody></table>';
+
+  document.getElementById('drillBody').innerHTML = html;
+  document.getElementById('drillOverlay').classList.add('open');
+}
+function closeDrill(){
+  document.getElementById('drillOverlay').classList.remove('open');
+}
+
 const savedKey = sessionStorage.getItem('shreelix_admin_key');
 if (savedKey) {
   document.getElementById('adminKeyInput').value = savedKey;
