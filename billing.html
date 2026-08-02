@@ -131,7 +131,10 @@
 <nav>
   <div class="wrap">
     <div class="brand"><span class="mark">S</span> ShreeLix</div>
-    <a class="back-link" href="index.html">&larr; Back to website</a>
+    <div style="display:flex;align-items:center;gap:18px;">
+      <a href="#" id="logoutLink" onclick="logoutUser(event)" style="display:none;font-size:13.5px;color:rgba(255,255,255,0.75);">Log out</a>
+      <a class="back-link" href="index.html">&larr; Back to website</a>
+    </div>
   </div>
 </nav>
 
@@ -1341,6 +1344,7 @@ async function handleGoogleCredential(response){
     USER_TOKEN = result.owner_token;
     localStorage.setItem('shreelix_user_token', USER_TOKEN);
     document.getElementById('signInOverlay').style.display = 'none';
+    updateLogoutLinkVisibility();
 
     if (result.is_new_user) {
       openBusinessSetup();
@@ -1349,7 +1353,11 @@ async function handleGoogleCredential(response){
       const u = result.user;
       applyBusinessProfileLocally(u.business_name, u.business_address, u.phone, u.business_gstin);
       cachedTokensUsed = u.tokens_used;
+      cachedTracksInventory = u.tracks_inventory;
+      cachedBusinessCategory = u.business_category;
       updateTokenBadge();
+      applyInventoryModeToUI();
+      populateCategorySelect('biz-category', cachedBusinessCategory);
       loadInventory();
       loadDashboard();
     }
@@ -1431,6 +1439,7 @@ async function submitBusinessSetup(){
     updateTokenBadge();
     applyInventoryModeToUI();
     document.getElementById('businessSetupOverlay').style.display = 'none';
+    updateLogoutLinkVisibility();
     loadInventory();
     loadDashboard();
   } catch(e) {
@@ -1445,6 +1454,26 @@ function showSignInIfNeeded(){
     document.getElementById('signInOverlay').style.display = 'flex';
     initGoogleSignIn();
   }
+  updateLogoutLinkVisibility();
+}
+
+function updateLogoutLinkVisibility(){
+  const link = document.getElementById('logoutLink');
+  if (link) link.style.display = isSignedIn() ? 'inline' : 'none';
+}
+
+function logoutUser(e){
+  if (e) e.preventDefault();
+  localStorage.removeItem('shreelix_user_token');
+  localStorage.removeItem('shreelix_business_name');
+  localStorage.removeItem('shreelix_business_address');
+  localStorage.removeItem('shreelix_business_phone');
+  localStorage.removeItem('shreelix_business_gstin');
+  USER_TOKEN = null;
+  cachedTokensUsed = 0;
+  cachedTracksInventory = true;
+  cachedBusinessCategory = null;
+  window.location.reload();
 }
 
 // ---------- Token / Free-Usage System (server is the source of truth, not localStorage) ----------
