@@ -639,13 +639,6 @@ async function saveBusinessProfileToServer(){
   } catch(e) { /* fails silently — data is still safe in localStorage as a fallback */ }
 }
 
-if (isSignedIn()) populateCategorySelect('biz-category', null).then(() => {
-  refreshTokenStatus().then(() => {
-    const bizCategorySelect = document.getElementById('biz-category');
-    if (bizCategorySelect) bizCategorySelect.value = cachedBusinessCategory || '';
-  });
-});
-
 const bizCategorySelect = document.getElementById('biz-category');
 if (bizCategorySelect) {
   bizCategorySelect.addEventListener('change', async () => {
@@ -1653,7 +1646,9 @@ checkStatus();
 if (isSignedIn()) {
   loadInventory();
   loadDashboard();
-  refreshTokenStatus();
+  refreshTokenStatus().then(() => {
+    populateCategorySelect('biz-category', cachedBusinessCategory);
+  });
 }
 updateTokenBadge();
 showSignInIfNeeded();
