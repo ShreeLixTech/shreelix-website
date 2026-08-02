@@ -174,11 +174,11 @@
         <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Bills created</div>
         <div id="dashBillCount" style="font-size:24px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;">0</div>
       </div>
-      <div class="card" style="padding:20px;">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Products in stock</div>
+      <div class="card" style="padding:20px;" id="dashProductCountCard">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;" id="dashProductCountLabel">Products in stock</div>
         <div id="dashProductCount" style="font-size:24px;font-weight:700;color:var(--navy);font-family:'Poppins',sans-serif;">0</div>
       </div>
-      <div class="card" style="padding:20px;">
+      <div class="card" style="padding:20px;" id="dashLowStockCard">
         <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Low / out of stock</div>
         <div id="dashLowStock" style="font-size:24px;font-weight:700;color:#B8720C;font-family:'Poppins',sans-serif;">0</div>
       </div>
@@ -199,13 +199,15 @@
   <div class="panel" id="panel-inventory">
     <div class="grid2">
       <div class="card">
-        <h3>Add product</h3>
-        <label for="p-name">Product name</label>
+        <h3 id="addProductHeading">Add product</h3>
+        <label for="p-name" id="pNameLabel">Product name</label>
         <input id="p-name" placeholder="e.g. Basmati Rice 5kg">
         <label for="p-price">Price (₹)</label>
         <input id="p-price" type="number" min="0" step="0.01" placeholder="0.00">
-        <label for="p-stock">Stock quantity</label>
-        <input id="p-stock" type="number" min="0" placeholder="0">
+        <div id="pStockWrap">
+          <label for="p-stock">Stock quantity</label>
+          <input id="p-stock" type="number" min="0" placeholder="0">
+        </div>
         <label for="p-gst">GST rate <a href="#" onclick="toggleGstGuide(event)" style="font-weight:400;color:var(--blue-deep);text-decoration:underline;">(need help choosing?)</a></label>
         <select id="p-gst">
           <option value="0">0% — fresh produce, milk, books</option>
@@ -240,6 +242,10 @@
           <input id="biz-phone" placeholder="e.g. 9876543210">
           <label for="biz-gstin">GSTIN (optional)</label>
           <input id="biz-gstin" placeholder="e.g. 27ABCDE1234F1Z5" style="text-transform:uppercase;">
+          <label for="biz-category">Business type</label>
+          <select id="biz-category">
+            <option value="">Loading…</option>
+          </select>
           <div id="gstinCheckResult" style="font-size:12px;margin-top:6px;"></div>
         </div>
       </div>
@@ -370,6 +376,11 @@
     <input id="reg-address" placeholder="Shop no., street, city, PIN">
     <label>Business phone</label>
     <input id="reg-phone" placeholder="e.g. 9876543210">
+    <label>What kind of business is this? *</label>
+    <select id="reg-category">
+      <option value="">Loading categories…</option>
+    </select>
+    <div class="hint" style="margin-top:4px;">This customizes the app — for example, service businesses won't be asked to track stock quantity.</div>
     <label>GSTIN <span style="font-weight:400;color:var(--muted);">(optional — add later if you don't have it yet)</span></label>
     <input id="reg-gstin" placeholder="e.g. 27ABCDE1234F1Z5" style="text-transform:uppercase;">
     <div id="regError" style="color:var(--red);font-size:12.5px;margin-top:8px;"></div>
@@ -535,22 +546,24 @@ async function loadInventory(){
       return;
     }
     let rows = products.map(p => {
-      let badge = p.stock_qty === 0
-        ? `<span class="badge out">Out of stock</span>`
-        : p.stock_qty < 5
-          ? `<span class="badge low">Low stock</span>`
-          : `<span class="badge ok">In stock</span>`;
+      let badge = !cachedTracksInventory
+        ? `<span class="badge ok">Available</span>`
+        : p.stock_qty === 0
+          ? `<span class="badge out">Out of stock</span>`
+          : p.stock_qty < 5
+            ? `<span class="badge low">Low stock</span>`
+            : `<span class="badge ok">In stock</span>`;
       return `<tr>
         <td>${escapeHtml(p.name)}</td>
         <td class="num">${money(p.price)}</td>
         <td class="num" style="color:var(--muted);font-size:12.5px;">${p.gst_rate}%</td>
-        <td class="num">${p.stock_qty}</td>
+        ${cachedTracksInventory ? `<td class="num">${p.stock_qty}</td>` : ''}
         <td>${badge}</td>
         <td><button class="btn small danger" data-id="${p.id}" data-name="${escapeHtml(p.name)}" onclick="deleteProduct(this.dataset.id, this.dataset.name)">Delete</button></td>
       </tr>`;
     }).join('');
     wrap.innerHTML = `<table>
-      <thead><tr><th>Product</th><th class="num">Price</th><th class="num">GST</th><th class="num">Stock</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th id="productColHeading">Product</th><th class="num">Price</th><th class="num">GST</th><th class="num" id="stockColHeading">Stock</th><th>Status</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
   } catch(e) {
@@ -624,6 +637,34 @@ async function saveBusinessProfileToServer(){
       }),
     });
   } catch(e) { /* fails silently — data is still safe in localStorage as a fallback */ }
+}
+
+if (isSignedIn()) populateCategorySelect('biz-category', null).then(() => {
+  refreshTokenStatus().then(() => {
+    const bizCategorySelect = document.getElementById('biz-category');
+    if (bizCategorySelect) bizCategorySelect.value = cachedBusinessCategory || '';
+  });
+});
+
+const bizCategorySelect = document.getElementById('biz-category');
+if (bizCategorySelect) {
+  bizCategorySelect.addEventListener('change', async () => {
+    if (!USER_TOKEN) return;
+    try {
+      const result = await api('/users/me/business-profile?user_token=' + encodeURIComponent(USER_TOKEN), {
+        method: 'PATCH',
+        body: JSON.stringify({ business_category: bizCategorySelect.value }),
+      });
+      cachedTracksInventory = result.tracks_inventory;
+      cachedBusinessCategory = result.business_category;
+      applyInventoryModeToUI();
+      loadInventory();
+      loadDashboard();
+      toast('Business type updated');
+    } catch(e) {
+      toast("Couldn't save — please try again", true);
+    }
+  });
 }
 
 const bizGstinInput = document.getElementById('biz-gstin');
@@ -1221,7 +1262,7 @@ async function loadDashboard(){
     document.getElementById('dashRevenue').textContent = money(revenue);
     document.getElementById('dashBillCount').textContent = bills.length;
     document.getElementById('dashProductCount').textContent = prods.length;
-    document.getElementById('dashLowStock').textContent = prods.filter(p => p.stock_qty < 5).length;
+    document.getElementById('dashLowStock').textContent = cachedTracksInventory ? prods.filter(p => p.stock_qty < 5).length : '—';
 
     // Top selling products (by quantity sold across all bills)
     const soldMap = {};
@@ -1335,6 +1376,26 @@ let pendingCredential = null;
 
 function openBusinessSetup(){
   document.getElementById('businessSetupOverlay').style.display = 'flex';
+  loadBusinessCategories();
+}
+
+async function loadBusinessCategories(){
+  await populateCategorySelect('reg-category');
+}
+
+async function populateCategorySelect(selectId, selectedValue){
+  const select = document.getElementById(selectId);
+  try {
+    const groups = await api('/business-categories');
+    select.innerHTML = '<option value="">Select your business type…</option>' +
+      Object.entries(groups).map(([groupName, categories]) => `
+        <optgroup label="${escapeHtml(groupName)}">
+          ${Object.keys(categories).map(name => `<option value="${escapeHtml(name)}" ${name === selectedValue ? 'selected' : ''}>${escapeHtml(name)}</option>`).join('')}
+        </optgroup>
+      `).join('');
+  } catch(e) {
+    select.innerHTML = '<option value="">Couldn\'t load — try again shortly</option>';
+  }
 }
 
 function applyBusinessProfileLocally(name, address, phone, gstin){
@@ -1352,8 +1413,10 @@ async function submitBusinessSetup(){
   const bizName = document.getElementById('reg-business').value.trim();
   const bizAddress = document.getElementById('reg-address').value.trim();
   const phone = document.getElementById('reg-phone').value.trim();
+  const category = document.getElementById('reg-category').value;
   const gstin = document.getElementById('reg-gstin').value.trim().toUpperCase();
   if (!bizName) { document.getElementById('regError').textContent = 'Business name is required'; return; }
+  if (!category) { document.getElementById('regError').textContent = 'Please select your business type'; return; }
   if (!pendingCredential) { document.getElementById('regError').textContent = 'Sign-in expired — please sign in again.'; return; }
 
   const btn = document.getElementById('regSubmitBtn');
@@ -1365,12 +1428,15 @@ async function submitBusinessSetup(){
       business_address: bizAddress || null,
       business_phone: phone || null,
       business_gstin: gstin || null,
+      business_category: category,
     })});
     USER_TOKEN = result.owner_token;
     localStorage.setItem('shreelix_user_token', USER_TOKEN);
     applyBusinessProfileLocally(bizName, bizAddress, phone, gstin);
     cachedTokensUsed = result.user.tokens_used;
+    cachedTracksInventory = result.user.tracks_inventory;
     updateTokenBadge();
+    applyInventoryModeToUI();
     document.getElementById('businessSetupOverlay').style.display = 'none';
     loadInventory();
     loadDashboard();
@@ -1391,6 +1457,8 @@ function showSignInIfNeeded(){
 // ---------- Token / Free-Usage System (server is the source of truth, not localStorage) ----------
 const FREE_TOKEN_LIMIT = 100;
 let cachedTokensUsed = 0; // just for display between server calls — never used to decide access
+let cachedTracksInventory = true; // false for service businesses — hides stock quantity UI
+let cachedBusinessCategory = null;
 
 function getTokensLeft(){
   return Math.max(0, FREE_TOKEN_LIMIT - cachedTokensUsed);
@@ -1419,13 +1487,47 @@ async function refreshTokenStatus(){
   try {
     const user = await api('/users/me?user_token=' + encodeURIComponent(USER_TOKEN));
     cachedTokensUsed = user.tokens_used;
+    cachedTracksInventory = user.tracks_inventory;
+    cachedBusinessCategory = user.business_category;
     updateTokenBadge();
+    applyInventoryModeToUI();
   } catch(e) { /* non-critical — badge just won't update this cycle */ }
 }
 
 function updateTokenBadge(){
   const badge = document.getElementById('tokenBadge');
   if (badge) badge.textContent = getTokensLeft() + ' free credits left';
+}
+
+function applyInventoryModeToUI(){
+  const isService = !cachedTracksInventory;
+
+  const heading = document.getElementById('addProductHeading');
+  if (heading) heading.textContent = isService ? 'Add service' : 'Add product';
+
+  const nameLabel = document.getElementById('pNameLabel');
+  if (nameLabel) nameLabel.textContent = isService ? 'Service name' : 'Product name';
+
+  const stockWrap = document.getElementById('pStockWrap');
+  if (stockWrap) stockWrap.style.display = isService ? 'none' : 'block';
+
+  const addBtn = document.getElementById('addProductBtn');
+  if (addBtn) addBtn.textContent = isService ? 'Add service' : 'Add to inventory';
+
+  const productColHeading = document.getElementById('productColHeading');
+  if (productColHeading) productColHeading.textContent = isService ? 'Service' : 'Product';
+
+  const stockColHeading = document.getElementById('stockColHeading');
+  if (stockColHeading) stockColHeading.style.display = isService ? 'none' : '';
+
+  const dashProductCountLabel = document.getElementById('dashProductCountLabel');
+  if (dashProductCountLabel) dashProductCountLabel.textContent = isService ? 'Services offered' : 'Products in stock';
+
+  const dashLowStockCard = document.getElementById('dashLowStockCard');
+  if (dashLowStockCard) dashLowStockCard.style.display = isService ? 'none' : 'block';
+
+  const inputNameEl = document.getElementById('p-name');
+  if (inputNameEl) inputNameEl.placeholder = isService ? 'e.g. Haircut & Styling' : 'e.g. Basmati Rice 5kg';
 }
 
 // ---------- Cross-sell popups ----------
