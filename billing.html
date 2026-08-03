@@ -162,6 +162,7 @@
   <div class="tabs">
     <div class="tab active" data-tab="dashboard">Dashboard</div>
     <div class="tab" data-tab="inventory">Inventory</div>
+    <div class="tab" id="tablesTabLink" data-tab="tables" style="display:none;">Tables & Orders</div>
     <div class="tab" data-tab="billing">New Bill</div>
     <div class="tab" data-tab="history">Bill History</div>
   </div>
@@ -205,13 +206,45 @@
         <h3 id="addProductHeading">Add product</h3>
         <label for="p-name" id="pNameLabel">Product name</label>
         <input id="p-name" placeholder="e.g. Basmati Rice 5kg">
-        <label for="p-price">Price (₹)</label>
+        <label for="p-price" id="pPriceLabel">Price (₹)</label>
         <input id="p-price" type="number" min="0" step="0.01" placeholder="0.00">
         <div id="pStockWrap">
           <label for="p-stock">Stock quantity</label>
           <input id="p-stock" type="number" min="0" placeholder="0">
         </div>
-        <label for="p-gst">GST rate <a href="#" onclick="toggleGstGuide(event)" style="font-weight:400;color:var(--blue-deep);text-decoration:underline;">(need help choosing?)</a></label>
+
+        <!-- JEWELRY-SPECIFIC FIELDS -->
+        <div id="jewelryFieldsWrap" style="display:none;">
+          <label for="p-purity">Purity</label>
+          <input id="p-purity" placeholder="e.g. 22K, 18K, 925 Silver">
+          <label for="p-making-type">Making charge type</label>
+          <select id="p-making-type">
+            <option value="percent">Percentage of gold value</option>
+            <option value="per_gram">Per gram</option>
+            <option value="flat">Flat amount</option>
+          </select>
+          <label for="p-making-value">Making charge value</label>
+          <input id="p-making-value" type="number" min="0" step="0.01" placeholder="e.g. 12 for 12%, or ₹500 for flat">
+          <label for="p-wastage">Wastage %</label>
+          <input id="p-wastage" type="number" min="0" step="0.01" placeholder="e.g. 2">
+          <label for="p-huid">HUID / Hallmark number <span style="font-weight:400;color:var(--muted);">(optional)</span></label>
+          <input id="p-huid" placeholder="e.g. AZ4B7C21">
+          <div class="hint">Price above should be the rate per gram for this purity — the bill screen will ask for each piece's exact weight.</div>
+        </div>
+
+        <!-- PHARMACY-SPECIFIC FIELDS -->
+        <div id="pharmacyFieldsWrap" style="display:none;">
+          <label for="p-batch">Batch number</label>
+          <input id="p-batch" placeholder="e.g. B2026-114">
+          <label for="p-expiry">Expiry date</label>
+          <input id="p-expiry" type="date">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-top:14px;">
+            <input type="checkbox" id="p-schedule-h" style="width:auto;"> This is a Schedule H / H1 drug (requires prescription)
+          </label>
+          <div class="hint">Adding the same medicine again with a new batch/expiry is normal — sales automatically use the batch expiring soonest first.</div>
+        </div>
+
+        <label for="p-gst" id="pGstLabel">GST rate <a href="#" onclick="toggleGstGuide(event)" style="font-weight:400;color:var(--blue-deep);text-decoration:underline;">(need help choosing?)</a></label>
         <select id="p-gst">
           <option value="0">0% — fresh produce, milk, books</option>
           <option value="5">5% — packaged food, tea, spices</option>
@@ -256,6 +289,59 @@
         <h3>Current inventory</h3>
         <div id="inventoryTableWrap">
           <div class="loading-row">Loading inventory…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLES & ORDERS (restaurant mode only) -->
+  <div class="panel" id="panel-tables">
+    <div id="tablesListView">
+      <div class="card" style="margin-bottom:20px;">
+        <h3>Your tables</h3>
+        <div style="display:flex;gap:10px;align-items:flex-end;">
+          <div style="flex:1;">
+            <label for="new-table-number">Table number/name</label>
+            <input id="new-table-number" placeholder="e.g. T1, Patio 2">
+          </div>
+          <button class="btn" style="width:auto;margin-top:0;" onclick="createTable()">+ Add table</button>
+        </div>
+      </div>
+      <div id="tablesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px;"></div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h3 style="margin:0;">Takeaway / Delivery orders</h3>
+          <div style="display:flex;gap:8px;">
+            <button class="btn secondary" style="width:auto;margin-top:0;" onclick="startOrder(null,'takeaway')">+ Takeaway</button>
+            <button class="btn secondary" style="width:auto;margin-top:0;" onclick="startOrder(null,'delivery')">+ Delivery</button>
+          </div>
+        </div>
+        <div id="openOrdersList"><div class="empty">No open takeaway/delivery orders.</div></div>
+      </div>
+    </div>
+
+    <!-- ORDER DETAIL VIEW -->
+    <div id="orderDetailView" style="display:none;">
+      <button class="btn secondary" style="width:auto;margin-bottom:16px;" onclick="closeOrderDetail()">← Back to tables</button>
+      <div class="grid2">
+        <div class="card">
+          <h3 id="orderDetailTitle">Order</h3>
+          <label for="order-item-select">Add from menu</label>
+          <select id="order-item-select"><option value="">Choose a menu item…</option></select>
+          <label for="order-item-qty">Quantity</label>
+          <input id="order-item-qty" type="number" min="1" value="1">
+          <label for="order-item-notes">Notes <span style="font-weight:400;color:var(--muted);">(optional — e.g. "no onion")</span></label>
+          <input id="order-item-notes" placeholder="e.g. extra spicy">
+          <button class="btn" onclick="addItemToOrder()">Send to kitchen (KOT)</button>
+        </div>
+        <div class="card">
+          <h3>Current order</h3>
+          <div id="orderItemsList"><div class="empty">No items yet.</div></div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+            <span>Total</span><span id="orderTotal">₹0.00</span>
+          </div>
+          <button class="btn" style="margin-top:16px;" onclick="finalizeOrder()">Finalize & Bill</button>
         </div>
       </div>
     </div>
@@ -309,7 +395,11 @@
       <div class="card">
         <h3>Bill items</h3>
         <div id="billItemsWrap"></div>
+        <div id="jewelryBillItemsWrap" style="display:none;"></div>
+        <div id="pharmacyBillItemsWrap" style="display:none;"></div>
         <button class="btn secondary" id="addLineBtn" style="margin-top:14px;">+ Add item</button>
+        <button class="btn secondary" id="addJewelryLineBtn" style="display:none;margin-top:14px;" onclick="addJewelryBillLine()">+ Add item</button>
+        <button class="btn secondary" id="addPharmacyLineBtn" style="display:none;margin-top:14px;" onclick="addPharmacyBillLine()">+ Add medicine</button>
         <div id="taxBreakdown" style="margin-top:16px;font-size:13px;color:var(--muted);"></div>
         <div class="total-box">
           <div class="label">Total (incl. GST)</div>
@@ -532,12 +622,168 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
-    if (tab.dataset.tab === 'billing') renderBillLines();
+    if (tab.dataset.tab === 'billing') {
+      if (cachedBillingMode === 'jewelry') renderJewelryBillLines(products);
+      else if (cachedBillingMode === 'pharmacy') renderPharmacyBillLines(products);
+      else renderBillLines();
+    }
     if (tab.dataset.tab === 'history') loadHistory();
     if (tab.dataset.tab === 'dashboard') loadDashboard();
+    if (tab.dataset.tab === 'tables') loadTables();
     maybeShowCrossSell();
   });
 });
+
+// ---------- Restaurant: Tables & Orders ----------
+let currentOrderId = null;
+
+async function loadTables(){
+  try {
+    const [tables, openOrders] = await Promise.all([
+      api('/restaurant/tables?owner_token=' + encodeURIComponent(USER_TOKEN)),
+      api('/restaurant/orders?owner_token=' + encodeURIComponent(USER_TOKEN) + '&status=open'),
+    ]);
+    const grid = document.getElementById('tablesGrid');
+    if (tables.length === 0) {
+      grid.innerHTML = '<div class="empty" style="grid-column:1/-1;">No tables yet — add one above.</div>';
+    } else {
+      grid.innerHTML = tables.map(t => {
+        const order = openOrders.find(o => o.table_id === t.id);
+        const occupied = t.status === 'occupied';
+        return `<div class="card" style="padding:16px;text-align:center;cursor:pointer;${occupied ? 'border-color:var(--blue);background:var(--bg);' : ''}"
+                  onclick="${occupied && order ? `openOrderDetail(${order.id})` : `startOrder(${t.id},'dine_in')`}">
+          <div style="font-weight:700;font-size:15px;margin-bottom:6px;">${escapeHtml(t.table_number)}</div>
+          <div style="font-size:12px;color:${occupied ? 'var(--blue-deep)' : 'var(--muted)'};font-weight:600;">${occupied ? 'Occupied' : 'Free'}</div>
+          ${occupied && order ? `<div style="font-size:12px;color:var(--muted);margin-top:4px;">${money(order.total)}</div>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    const takeawayDelivery = openOrders.filter(o => o.table_id === null);
+    const listEl = document.getElementById('openOrdersList');
+    listEl.innerHTML = takeawayDelivery.length === 0
+      ? '<div class="empty">No open takeaway/delivery orders.</div>'
+      : takeawayDelivery.map(o => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;" onclick="openOrderDetail(${o.id})">
+          <span style="font-weight:600;">${o.order_type === 'takeaway' ? '🥡 Takeaway' : '🛵 Delivery'} #${o.id}</span>
+          <span style="color:var(--muted);">${money(o.total)}</span>
+        </div>
+      `).join('');
+  } catch(e) {
+    toast("Couldn't load tables", true);
+  }
+}
+
+async function createTable(){
+  const input = document.getElementById('new-table-number');
+  const tableNumber = input.value.trim();
+  if (!tableNumber) { toast('Enter a table number or name', true); return; }
+  try {
+    await api('/restaurant/tables', {method:'POST', body: JSON.stringify({owner_token: USER_TOKEN, table_number: tableNumber})});
+    input.value = '';
+    loadTables();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function startOrder(tableId, orderType){
+  try {
+    const order = await api('/restaurant/orders', {method:'POST', body: JSON.stringify({owner_token: USER_TOKEN, table_id: tableId, order_type: orderType})});
+    openOrderDetail(order.id);
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function openOrderDetail(orderId){
+  currentOrderId = orderId;
+  document.getElementById('tablesListView').style.display = 'none';
+  document.getElementById('orderDetailView').style.display = 'block';
+
+  try {
+    const [products] = await Promise.all([api('/products?owner_token=' + encodeURIComponent(USER_TOKEN))]);
+    const select = document.getElementById('order-item-select');
+    select.innerHTML = '<option value="">Choose a menu item…</option>' +
+      products.map(p => `<option value="${p.id}" data-price="${p.price}" data-gst="${p.gst_rate}">${escapeHtml(p.name)} — ${money(p.price)}</option>`).join('');
+  } catch(e) { /* menu list is a convenience — the item name/price fields below still work manually if this fails */ }
+
+  await refreshOrderDetail();
+}
+
+async function refreshOrderDetail(){
+  if (!currentOrderId) return;
+  try {
+    const order = await api('/restaurant/orders/' + currentOrderId);
+    document.getElementById('orderDetailTitle').textContent =
+      order.table_id ? `Order — Table` : `Order — ${order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'} #${order.id}`;
+    const itemsEl = document.getElementById('orderItemsList');
+    itemsEl.innerHTML = order.items.length === 0 ? '<div class="empty">No items yet.</div>' :
+      order.items.map(i => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;font-size:13.5px;">${i.quantity}x ${escapeHtml(i.item_name)}</div>
+            ${i.notes ? `<div style="font-size:11.5px;color:var(--muted);">${escapeHtml(i.notes)}</div>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:13px;">${money(i.price * i.quantity)}</span>
+            <button class="btn small danger" onclick="removeOrderItem(${i.id})">✕</button>
+          </div>
+        </div>
+      `).join('');
+    document.getElementById('orderTotal').textContent = money(order.total);
+  } catch(e) {
+    toast("Couldn't load order", true);
+  }
+}
+
+async function addItemToOrder(){
+  const select = document.getElementById('order-item-select');
+  const opt = select.options[select.selectedIndex];
+  const qty = parseInt(document.getElementById('order-item-qty').value) || 1;
+  const notes = document.getElementById('order-item-notes').value.trim();
+  if (!opt || !opt.value) { toast('Choose an item from the menu', true); return; }
+
+  try {
+    await api(`/restaurant/orders/${currentOrderId}/items`, {method:'POST', body: JSON.stringify({
+      product_id: parseInt(opt.value), item_name: opt.text.split(' — ')[0],
+      quantity: qty, price: parseFloat(opt.dataset.price), gst_rate: parseFloat(opt.dataset.gst), notes: notes || null,
+    })});
+    document.getElementById('order-item-qty').value = '1';
+    document.getElementById('order-item-notes').value = '';
+    refreshOrderDetail();
+    toast('Sent to kitchen');
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function removeOrderItem(itemId){
+  try {
+    await api(`/restaurant/orders/${currentOrderId}/items/${itemId}`, {method:'DELETE'});
+    refreshOrderDetail();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function finalizeOrder(){
+  if (!confirm('Finalize this order and generate the bill?')) return;
+  try {
+    const result = await api(`/restaurant/orders/${currentOrderId}/finalize`, {method:'POST'});
+    toast('Billed — ' + money(result.total_amount));
+    closeOrderDetail();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+function closeOrderDetail(){
+  currentOrderId = null;
+  document.getElementById('orderDetailView').style.display = 'none';
+  document.getElementById('tablesListView').style.display = 'block';
+  loadTables();
+}
 
 // ---------- Inventory ----------
 async function loadInventory(){
@@ -589,20 +835,48 @@ document.getElementById('addProductBtn').addEventListener('click', async () => {
   const hsnCode = document.getElementById('p-hsn').value.trim();
   if (!name || isNaN(price)) { toast('Enter a product name and price', true); return; }
 
+  const payload = {name, price, stock_qty: stock, gst_rate: gstRate, hsn_code: hsnCode || null, owner_token: USER_TOKEN};
+
+  if (cachedBillingMode === 'jewelry') {
+    payload.purity = document.getElementById('p-purity').value.trim() || null;
+    payload.making_charge_type = document.getElementById('p-making-type').value;
+    payload.making_charge_value = parseFloat(document.getElementById('p-making-value').value) || 0;
+    payload.wastage_percent = parseFloat(document.getElementById('p-wastage').value) || 0;
+    payload.huid = document.getElementById('p-huid').value.trim() || null;
+  }
+  if (cachedBillingMode === 'pharmacy') {
+    payload.batch_number = document.getElementById('p-batch').value.trim() || null;
+    const expiryVal = document.getElementById('p-expiry').value;
+    payload.expiry_date = expiryVal ? expiryVal + 'T00:00:00' : null;
+    payload.is_schedule_h = document.getElementById('p-schedule-h').checked;
+  }
+
   const btn = document.getElementById('addProductBtn');
+  const originalText = btn.textContent;
   btn.disabled = true; btn.textContent = 'Adding…';
   try {
-    await api('/products', {method:'POST', body: JSON.stringify({name, price, stock_qty: stock, gst_rate: gstRate, hsn_code: hsnCode || null, owner_token: USER_TOKEN})});
-    toast('Product added');
+    await api('/products', {method:'POST', body: JSON.stringify(payload)});
+    toast(cachedBillingMode === 'pharmacy' ? 'Batch added' : 'Added');
     document.getElementById('p-name').value = '';
     document.getElementById('p-price').value = '';
     document.getElementById('p-stock').value = '';
     document.getElementById('p-hsn').value = '';
+    if (cachedBillingMode === 'jewelry') {
+      document.getElementById('p-purity').value = '';
+      document.getElementById('p-making-value').value = '';
+      document.getElementById('p-wastage').value = '';
+      document.getElementById('p-huid').value = '';
+    }
+    if (cachedBillingMode === 'pharmacy') {
+      document.getElementById('p-batch').value = '';
+      document.getElementById('p-expiry').value = '';
+      document.getElementById('p-schedule-h').checked = false;
+    }
     loadInventory();
   } catch(e) {
     toast(e.message, true);
   } finally {
-    btn.disabled = false; btn.textContent = 'Add to inventory';
+    btn.disabled = false; btn.textContent = originalText;
   }
 });
 
@@ -652,6 +926,7 @@ if (bizCategorySelect) {
         body: JSON.stringify({ business_category: bizCategorySelect.value }),
       });
       cachedTracksInventory = result.tracks_inventory;
+      cachedBillingMode = result.billing_mode;
       cachedBusinessCategory = result.business_category;
       applyInventoryModeToUI();
       loadInventory();
@@ -916,7 +1191,7 @@ document.getElementById('c-amount-paid').addEventListener('input', updateTotal);
 
 document.getElementById('addLineBtn').addEventListener('click', addBillLine);
 
-document.getElementById('createBillBtn').addEventListener('click', async () => {
+async function createGenericBill(){
   if (!(await consumeToken())) return;
   const items = billLines.filter(l => l.product_id).map(l => ({product_id: parseInt(l.product_id), quantity: l.quantity}));
   if (items.length === 0) { toast('Add at least one item to the bill', true); return; }
@@ -980,6 +1255,127 @@ document.getElementById('createBillBtn').addEventListener('click', async () => {
   } finally {
     btn.disabled = false; btn.textContent = 'Create bill';
   }
+}
+
+// ---------- Jewelry & Pharmacy billing (separate flows — different math, different endpoints) ----------
+let jewelryBillLines = [];
+let pharmacyBillLines = [];
+
+function renderJewelryBillLines(products){
+  const wrap = document.getElementById('jewelryBillItemsWrap');
+  if (!wrap) return;
+  wrap.innerHTML = jewelryBillLines.map((line, idx) => {
+    const product = products.find(p => p.id === line.product_id);
+    return `
+      <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:8px;margin-bottom:10px;align-items:end;">
+        <div>
+          <label style="font-size:11.5px;">Item</label>
+          <select onchange="jewelryBillLines[${idx}].product_id=parseInt(this.value)||null;renderJewelryBillLines(products);">
+            <option value="">Choose…</option>
+            ${products.map(p => `<option value="${p.id}" ${p.id===line.product_id?'selected':''}>${escapeHtml(p.name)} (${p.purity||''}, ₹${p.price}/g)</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11.5px;">Weight (g)</label>
+          <input type="number" min="0" step="0.001" value="${line.weight_grams}" oninput="jewelryBillLines[${idx}].weight_grams=parseFloat(this.value)||0;">
+        </div>
+        <button class="btn small danger" style="margin-top:20px;" onclick="jewelryBillLines.splice(${idx},1);renderJewelryBillLines(products);">✕</button>
+      </div>
+      ${product ? `<div class="hint" style="margin-top:-6px;margin-bottom:10px;">Making: ${product.making_charge_type==='percent'?product.making_charge_value+'%':product.making_charge_type==='per_gram'?'₹'+product.making_charge_value+'/g':'₹'+product.making_charge_value+' flat'} · Wastage: ${product.wastage_percent||0}%</div>` : ''}
+    `;
+  }).join('');
+}
+
+function addJewelryBillLine(){
+  jewelryBillLines.push({product_id: null, weight_grams: 0});
+  renderJewelryBillLines(products);
+}
+
+async function createJewelryBill(){
+  if (!(await consumeToken())) return;
+  const items = jewelryBillLines.filter(l => l.product_id && l.weight_grams > 0).map(l => ({product_id: l.product_id, weight_grams: l.weight_grams, quantity: 1}));
+  if (items.length === 0) { toast('Add at least one item with a weight', true); return; }
+
+  const btn = document.getElementById('createBillBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const bill = await api('/jewelry/bill', {method:'POST', body: JSON.stringify({
+      owner_token: USER_TOKEN,
+      customer_name: document.getElementById('c-name').value.trim() || null,
+      customer_phone: document.getElementById('c-phone').value.trim() || null,
+      customer_address: document.getElementById('c-address').value.trim() || null,
+      items, payment_mode: document.getElementById('c-payment-mode').value,
+    })});
+    toast('Bill created — ' + money(bill.total_amount));
+    jewelryBillLines = [];
+    renderJewelryBillLines(products);
+    await loadInventory();
+    loadDashboard();
+  } catch(e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create bill';
+  }
+}
+
+function renderPharmacyBillLines(products){
+  const wrap = document.getElementById('pharmacyBillItemsWrap');
+  if (!wrap) return;
+  const uniqueNames = [...new Set(products.map(p => p.name))];
+  wrap.innerHTML = pharmacyBillLines.map((line, idx) => `
+    <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:8px;margin-bottom:10px;align-items:end;">
+      <div>
+        <label style="font-size:11.5px;">Medicine</label>
+        <select onchange="pharmacyBillLines[${idx}].product_name=this.value;">
+          <option value="">Choose…</option>
+          ${uniqueNames.map(n => `<option value="${escapeHtml(n)}" ${n===line.product_name?'selected':''}>${escapeHtml(n)}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11.5px;">Quantity</label>
+        <input type="number" min="1" value="${line.quantity}" oninput="pharmacyBillLines[${idx}].quantity=parseInt(this.value)||1;">
+      </div>
+      <button class="btn small danger" style="margin-top:20px;" onclick="pharmacyBillLines.splice(${idx},1);renderPharmacyBillLines(products);">✕</button>
+    </div>
+  `).join('') + '<div class="hint">The batch expiring soonest is used automatically — no need to pick a specific batch.</div>';
+}
+
+function addPharmacyBillLine(){
+  pharmacyBillLines.push({product_name: '', quantity: 1});
+  renderPharmacyBillLines(products);
+}
+
+async function createPharmacyBill(){
+  if (!(await consumeToken())) return;
+  const items = pharmacyBillLines.filter(l => l.product_name && l.quantity > 0).map(l => ({product_name: l.product_name, quantity: l.quantity}));
+  if (items.length === 0) { toast('Add at least one medicine and quantity', true); return; }
+
+  const btn = document.getElementById('createBillBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const bill = await api('/pharmacy/bill', {method:'POST', body: JSON.stringify({
+      owner_token: USER_TOKEN,
+      customer_name: document.getElementById('c-name').value.trim() || null,
+      customer_phone: document.getElementById('c-phone').value.trim() || null,
+      customer_address: document.getElementById('c-address').value.trim() || null,
+      items, payment_mode: document.getElementById('c-payment-mode').value,
+    })});
+    toast('Bill created — ' + money(bill.total_amount));
+    pharmacyBillLines = [];
+    renderPharmacyBillLines(products);
+    await loadInventory();
+    loadDashboard();
+  } catch(e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create bill';
+  }
+}
+
+document.getElementById('createBillBtn').addEventListener('click', () => {
+  if (cachedBillingMode === 'jewelry') createJewelryBill();
+  else if (cachedBillingMode === 'pharmacy') createPharmacyBill();
+  else createGenericBill();
 });
 
 function generateInvoicePDF(bill){
@@ -1354,6 +1750,7 @@ async function handleGoogleCredential(response){
       applyBusinessProfileLocally(u.business_name, u.business_address, u.phone, u.business_gstin);
       cachedTokensUsed = u.tokens_used;
       cachedTracksInventory = u.tracks_inventory;
+      cachedBillingMode = u.billing_mode;
       cachedBusinessCategory = u.business_category;
       updateTokenBadge();
       applyInventoryModeToUI();
@@ -1436,6 +1833,7 @@ async function submitBusinessSetup(){
     applyBusinessProfileLocally(bizName, bizAddress, phone, gstin);
     cachedTokensUsed = result.user.tokens_used;
     cachedTracksInventory = result.user.tracks_inventory;
+    cachedBillingMode = result.user.billing_mode;
     updateTokenBadge();
     applyInventoryModeToUI();
     document.getElementById('businessSetupOverlay').style.display = 'none';
@@ -1472,6 +1870,7 @@ function logoutUser(e){
   USER_TOKEN = null;
   cachedTokensUsed = 0;
   cachedTracksInventory = true;
+  cachedBillingMode = 'general';
   cachedBusinessCategory = null;
   window.location.reload();
 }
@@ -1480,6 +1879,7 @@ function logoutUser(e){
 const FREE_TOKEN_LIMIT = 100;
 let cachedTokensUsed = 0; // just for display between server calls — never used to decide access
 let cachedTracksInventory = true; // false for service businesses — hides stock quantity UI
+let cachedBillingMode = 'general'; // general, service, jewelry, pharmacy, restaurant
 let cachedBusinessCategory = null;
 
 function getTokensLeft(){
@@ -1510,6 +1910,7 @@ async function refreshTokenStatus(){
     const user = await api('/users/me?user_token=' + encodeURIComponent(USER_TOKEN));
     cachedTokensUsed = user.tokens_used;
     cachedTracksInventory = user.tracks_inventory;
+    cachedBillingMode = user.billing_mode;
     cachedBusinessCategory = user.business_category;
     updateTokenBadge();
     applyInventoryModeToUI();
@@ -1522,34 +1923,68 @@ function updateTokenBadge(){
 }
 
 function applyInventoryModeToUI(){
-  const isService = !cachedTracksInventory;
+  const mode = cachedBillingMode || 'general';
+  const isService = mode === 'service';
+  const isJewelry = mode === 'jewelry';
+  const isPharmacy = mode === 'pharmacy';
+  const isRestaurant = mode === 'restaurant';
 
   const heading = document.getElementById('addProductHeading');
-  if (heading) heading.textContent = isService ? 'Add service' : 'Add product';
+  if (heading) heading.textContent = isService ? 'Add service' : isRestaurant ? 'Add menu item' : 'Add product';
 
   const nameLabel = document.getElementById('pNameLabel');
-  if (nameLabel) nameLabel.textContent = isService ? 'Service name' : 'Product name';
+  if (nameLabel) nameLabel.textContent = isService ? 'Service name' : isRestaurant ? 'Dish name' : 'Product name';
 
   const stockWrap = document.getElementById('pStockWrap');
-  if (stockWrap) stockWrap.style.display = isService ? 'none' : 'block';
+  if (stockWrap) stockWrap.style.display = (isService || isRestaurant) ? 'none' : 'block';
+
+  const priceLabel = document.getElementById('pPriceLabel');
+  if (priceLabel) priceLabel.textContent = isJewelry ? 'Rate per gram (₹)' : 'Price (₹)';
+
+  const jewelryFields = document.getElementById('jewelryFieldsWrap');
+  if (jewelryFields) jewelryFields.style.display = isJewelry ? 'block' : 'none';
+
+  const pharmacyFields = document.getElementById('pharmacyFieldsWrap');
+  if (pharmacyFields) pharmacyFields.style.display = isPharmacy ? 'block' : 'none';
 
   const addBtn = document.getElementById('addProductBtn');
-  if (addBtn) addBtn.textContent = isService ? 'Add service' : 'Add to inventory';
+  if (addBtn) addBtn.textContent = isService ? 'Add service' : isRestaurant ? 'Add to menu' : isPharmacy ? 'Add batch' : 'Add to inventory';
 
   const productColHeading = document.getElementById('productColHeading');
-  if (productColHeading) productColHeading.textContent = isService ? 'Service' : 'Product';
+  if (productColHeading) productColHeading.textContent = isService ? 'Service' : isRestaurant ? 'Dish' : 'Product';
 
   const stockColHeading = document.getElementById('stockColHeading');
-  if (stockColHeading) stockColHeading.style.display = isService ? 'none' : '';
+  if (stockColHeading) stockColHeading.style.display = (isService || isRestaurant) ? 'none' : '';
 
   const dashProductCountLabel = document.getElementById('dashProductCountLabel');
-  if (dashProductCountLabel) dashProductCountLabel.textContent = isService ? 'Services offered' : 'Products in stock';
+  if (dashProductCountLabel) dashProductCountLabel.textContent = isService ? 'Services offered' : isRestaurant ? 'Menu items' : 'Products in stock';
 
   const dashLowStockCard = document.getElementById('dashLowStockCard');
-  if (dashLowStockCard) dashLowStockCard.style.display = isService ? 'none' : 'block';
+  if (dashLowStockCard) dashLowStockCard.style.display = (isService || isRestaurant) ? 'none' : 'block';
 
   const inputNameEl = document.getElementById('p-name');
-  if (inputNameEl) inputNameEl.placeholder = isService ? 'e.g. Haircut & Styling' : 'e.g. Basmati Rice 5kg';
+  if (inputNameEl) inputNameEl.placeholder = isService ? 'e.g. Haircut & Styling' : isJewelry ? 'e.g. Gold Necklace' :
+    isPharmacy ? 'e.g. Paracetamol 500mg' : isRestaurant ? 'e.g. Butter Chicken' : 'e.g. Basmati Rice 5kg';
+
+  const tablesTab = document.getElementById('tablesTabLink');
+  if (tablesTab) tablesTab.style.display = isRestaurant ? 'inline-block' : 'none';
+
+  const genericWrap = document.getElementById('billItemsWrap');
+  const jewelryWrap = document.getElementById('jewelryBillItemsWrap');
+  const pharmacyWrap = document.getElementById('pharmacyBillItemsWrap');
+  const addLineBtn = document.getElementById('addLineBtn');
+  const addJewelryBtn = document.getElementById('addJewelryLineBtn');
+  const addPharmacyBtn = document.getElementById('addPharmacyLineBtn');
+  if (genericWrap) genericWrap.style.display = isJewelry || isPharmacy ? 'none' : 'block';
+  if (jewelryWrap) jewelryWrap.style.display = isJewelry ? 'block' : 'none';
+  if (pharmacyWrap) pharmacyWrap.style.display = isPharmacy ? 'block' : 'none';
+  if (addLineBtn) addLineBtn.style.display = isJewelry || isPharmacy ? 'none' : 'block';
+  if (addJewelryBtn) addJewelryBtn.style.display = isJewelry ? 'block' : 'none';
+  if (addPharmacyBtn) addPharmacyBtn.style.display = isPharmacy ? 'block' : 'none';
+
+  // Discount/interstate don't apply to our jewelry/pharmacy billing endpoints yet — hide to avoid confusion
+  const interstateRow = document.getElementById('c-interstate');
+  if (interstateRow) interstateRow.parentElement.style.display = isJewelry || isPharmacy ? 'none' : 'flex';
 }
 
 // ---------- Cross-sell popups ----------
