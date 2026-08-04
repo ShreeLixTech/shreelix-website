@@ -258,8 +258,10 @@
         <h3 id="addProductHeading">Add product</h3>
         <label for="p-name" id="pNameLabel">Product name</label>
         <input id="p-name" placeholder="e.g. Basmati Rice 5kg">
-        <label for="p-price" id="pPriceLabel">Price (₹)</label>
-        <input id="p-price" type="number" min="0" step="0.01" placeholder="0.00">
+        <div id="pPriceWrap">
+          <label for="p-price" id="pPriceLabel">Price (₹)</label>
+          <input id="p-price" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
         <div id="pStockWrap">
           <label for="p-stock">Stock quantity</label>
           <input id="p-stock" type="number" min="0" placeholder="0">
@@ -299,6 +301,7 @@
         <label for="p-gst" id="pGstLabel">GST rate <a href="#" onclick="toggleGstGuide(event)" style="font-weight:400;color:var(--blue-deep);text-decoration:underline;">(need help choosing?)</a></label>
         <select id="p-gst">
           <option value="0">0% — fresh produce, milk, books</option>
+          <option value="3">3% — gold/silver jewelry (mandatory rate)</option>
           <option value="5">5% — packaged food, tea, spices</option>
           <option value="12">12% — processed foods, phones</option>
           <option value="18" selected>18% — most goods & services (default)</option>
@@ -1341,11 +1344,15 @@ function escapeHtml(str){
 document.getElementById('addProductBtn').addEventListener('click', async () => {
   if (!(await consumeToken())) return;
   const name = document.getElementById('p-name').value.trim();
-  const price = parseFloat(document.getElementById('p-price').value);
+  const priceInput = document.getElementById('p-price').value;
+  const price = cachedBillingMode === 'jewelry' ? (parseFloat(priceInput) || 0) : parseFloat(priceInput);
   const stock = parseInt(document.getElementById('p-stock').value || '0');
   const gstRate = parseFloat(document.getElementById('p-gst').value);
   const hsnCode = document.getElementById('p-hsn').value.trim();
   if (!name || isNaN(price)) { toast('Enter a product name and price', true); return; }
+  if (cachedBillingMode === 'jewelry' && !document.getElementById('p-purity').value.trim()) {
+    toast('Enter a purity — this is how Today\'s Rate gets matched to this item', true); return;
+  }
 
   const payload = {name, price, stock_qty: stock, gst_rate: gstRate, hsn_code: hsnCode || null, owner_token: USER_TOKEN};
 
@@ -2698,6 +2705,8 @@ function applyInventoryModeToUI(){
 
   const priceLabel = document.getElementById('pPriceLabel');
   if (priceLabel) priceLabel.textContent = isJewelry ? 'Rate per gram (₹)' : 'Price (₹)';
+  const priceWrap = document.getElementById('pPriceWrap');
+  if (priceWrap) priceWrap.style.display = isJewelry ? 'none' : 'block';
 
   const jewelryFields = document.getElementById('jewelryFieldsWrap');
   if (jewelryFields) jewelryFields.style.display = isJewelry ? 'block' : 'none';
@@ -2726,6 +2735,9 @@ function applyInventoryModeToUI(){
   const inputNameEl = document.getElementById('p-name');
   if (inputNameEl) inputNameEl.placeholder = isService ? 'e.g. Haircut & Styling' : isJewelry ? 'e.g. Gold Necklace' :
     isPharmacy ? 'e.g. Paracetamol 500mg' : isRestaurant ? 'e.g. Butter Chicken' : 'e.g. Basmati Rice 5kg';
+
+  const gstSelect = document.getElementById('p-gst');
+  if (gstSelect && isJewelry) gstSelect.value = '3';
 
   const excelHint = document.getElementById('excelColumnsHint');
   if (excelHint) {
