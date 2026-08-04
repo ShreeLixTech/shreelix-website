@@ -164,6 +164,8 @@
       <div class="tab active" data-tab="dashboard"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></span> Dashboard</div>
       <div class="tab" data-tab="inventory"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7 12 3 4 7l8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M12 11v10"/></svg></span> Inventory</div>
       <div class="tab" id="tablesTabLink" data-tab="tables" style="display:none;"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></span> Tables &amp; Orders</div>
+      <div class="tab" id="jobCardsTabLink" data-tab="jobcards" style="display:none;"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="11" y2="11"/></svg></span> Job Cards</div>
+      <div class="tab" id="membersTabLink" data-tab="members" style="display:none;"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Members</div>
       <div class="tab" data-tab="billing"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span> New Bill</div>
       <div class="tab" data-tab="history"><span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><polyline points="12 7 12 12 15.5 14"/></svg></span> Bill History</div>
     </nav>
@@ -379,6 +381,134 @@
           <button class="btn" style="margin-top:16px;" onclick="finalizeOrder()">Finalize & Bill</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- JOB CARDS (repair shops, tailoring, etc.) -->
+  <div class="panel" id="panel-jobcards">
+    <div id="jobCardsListView">
+      <div class="card" style="margin-bottom:20px;">
+        <h3>New job card</h3>
+        <div class="grid2" style="align-items:start;">
+          <div>
+            <label for="jc-customer-name">Customer name</label>
+            <input id="jc-customer-name" placeholder="e.g. Rahul Sharma">
+            <label for="jc-customer-phone">Phone</label>
+            <input id="jc-customer-phone" placeholder="Optional">
+          </div>
+          <div>
+            <label for="jc-item-desc">Item / device</label>
+            <input id="jc-item-desc" placeholder="e.g. iPhone 13 - cracked screen">
+            <label for="jc-problem">Problem notes</label>
+            <input id="jc-problem" placeholder="e.g. Dropped, screen shattered">
+          </div>
+        </div>
+        <div class="grid2" style="align-items:start;margin-top:10px;">
+          <div>
+            <label for="jc-estimate">Estimated cost (₹) <span style="font-weight:400;color:var(--muted);">(optional)</span></label>
+            <input id="jc-estimate" type="number" min="0" step="0.01" placeholder="0.00">
+          </div>
+          <div>
+            <label for="jc-advance">Advance collected (₹)</label>
+            <input id="jc-advance" type="number" min="0" step="0.01" value="0">
+          </div>
+        </div>
+        <button class="btn" onclick="createJobCard()">Create job card</button>
+      </div>
+
+      <div class="card">
+        <h3>Open job cards</h3>
+        <div id="jobCardsList"><div class="empty">No open job cards yet.</div></div>
+      </div>
+    </div>
+
+    <!-- JOB CARD DETAIL VIEW -->
+    <div id="jobCardDetailView" style="display:none;">
+      <button class="btn secondary" style="width:auto;margin-bottom:16px;" onclick="closeJobCardDetail()">← Back to job cards</button>
+      <div class="grid2">
+        <div class="card">
+          <h3 id="jcDetailTitle">Job card</h3>
+          <div id="jcDetailMeta" style="font-size:13px;color:var(--muted);margin-bottom:16px;"></div>
+          <label for="jc-status-select">Status</label>
+          <select id="jc-status-select" onchange="updateJobCardStatus(this.value)">
+            <option value="received">Received</option>
+            <option value="in_progress">In Progress</option>
+            <option value="waiting_parts">Waiting for Parts</option>
+            <option value="ready">Ready for Pickup</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+
+          <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+            <label for="jc-item-type">Add charge</label>
+            <select id="jc-item-type" onchange="onJcItemTypeChange()">
+              <option value="labor">Labor charge</option>
+              <option value="part">Part (from inventory)</option>
+            </select>
+            <div id="jcPartSelectWrap" style="display:none;">
+              <label for="jc-part-select">Part</label>
+              <select id="jc-part-select"><option value="">Choose a part…</option></select>
+            </div>
+            <div id="jcLaborDescWrap">
+              <label for="jc-item-desc-input">Description</label>
+              <input id="jc-item-desc-input" placeholder="e.g. Screen replacement labor">
+            </div>
+            <label for="jc-item-qty">Quantity</label>
+            <input id="jc-item-qty" type="number" min="1" value="1">
+            <label for="jc-item-price">Price (₹)</label>
+            <input id="jc-item-price" type="number" min="0" step="0.01" placeholder="0.00">
+            <button class="btn" onclick="addJobCardItem()">Add to job card</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Charges</h3>
+          <div id="jcItemsList"><div class="empty">No charges added yet.</div></div>
+          <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+            <span>Total</span><span id="jcTotal">₹0.00</span>
+          </div>
+          <button class="btn" style="margin-top:16px;" onclick="finalizeJobCard()">Finalize &amp; Bill</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMBERSHIP (gyms, yoga studios, sports clubs) -->
+  <div class="panel" id="panel-members">
+    <div class="grid2" style="margin-bottom:24px;">
+      <div class="card">
+        <h3>Membership plans</h3>
+        <label for="mp-name">Plan name</label>
+        <input id="mp-name" placeholder="e.g. Monthly Gym Membership">
+        <label for="mp-duration">Duration (days)</label>
+        <input id="mp-duration" type="number" min="1" placeholder="e.g. 30">
+        <label for="mp-price">Price (₹)</label>
+        <input id="mp-price" type="number" min="0" step="0.01" placeholder="0.00">
+        <label for="mp-gst">GST rate (%)</label>
+        <input id="mp-gst" type="number" min="0" step="0.01" value="18">
+        <button class="btn" onclick="createMembershipPlan()">Create plan</button>
+        <div id="plansList" style="margin-top:16px;"></div>
+      </div>
+
+      <div class="card">
+        <h3>Enroll a new member</h3>
+        <label for="mem-name">Member name</label>
+        <input id="mem-name" placeholder="e.g. Amit Kumar">
+        <label for="mem-phone">Phone</label>
+        <input id="mem-phone" placeholder="Optional">
+        <label for="mem-plan">Plan</label>
+        <select id="mem-plan"><option value="">Choose a plan…</option></select>
+        <label for="mem-payment">Payment mode</label>
+        <select id="mem-payment">
+          <option value="cash">Cash</option>
+          <option value="upi">UPI</option>
+          <option value="card">Card</option>
+        </select>
+        <button class="btn" onclick="enrollMember()">Enroll &amp; bill</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Your members</h3>
+      <div id="membersList"><div class="empty">No members yet.</div></div>
     </div>
   </div>
 
@@ -668,6 +798,8 @@ document.querySelectorAll('.tab').forEach(tab => {
     if (tab.dataset.tab === 'history') loadHistory();
     if (tab.dataset.tab === 'dashboard') loadDashboard();
     if (tab.dataset.tab === 'tables') loadTables();
+    if (tab.dataset.tab === 'jobcards') loadJobCards();
+    if (tab.dataset.tab === 'members') loadMembersPanel();
     maybeShowCrossSell();
   });
 });
@@ -821,6 +953,289 @@ function closeOrderDetail(){
   document.getElementById('orderDetailView').style.display = 'none';
   document.getElementById('tablesListView').style.display = 'block';
   loadTables();
+}
+
+// ---------- Job Cards (repair shops, tailoring) ----------
+let currentJobCardId = null;
+
+async function loadJobCards(){
+  try {
+    const cards = await api('/jobcards?owner_token=' + encodeURIComponent(USER_TOKEN));
+    const openCards = cards.filter(c => c.status !== 'delivered' && c.status !== 'cancelled');
+    const listEl = document.getElementById('jobCardsList');
+    const statusLabels = {received:'Received', in_progress:'In Progress', waiting_parts:'Waiting for Parts', ready:'Ready for Pickup'};
+    const statusColors = {received:'var(--muted)', in_progress:'var(--blue-deep)', waiting_parts:'#B8720C', ready:'var(--green)'};
+    listEl.innerHTML = openCards.length === 0 ? '<div class="empty">No open job cards yet.</div>' :
+      openCards.map(c => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:14px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;" onclick="openJobCardDetail(${c.id})">
+          <div>
+            <div style="font-weight:600;font-size:13.5px;">${escapeHtml(c.item_description)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">${escapeHtml(c.customer_name)}${c.customer_phone ? ' · ' + escapeHtml(c.customer_phone) : ''}</div>
+          </div>
+          <span style="font-size:11.5px;font-weight:700;color:${statusColors[c.status]};text-transform:uppercase;letter-spacing:0.02em;">${statusLabels[c.status] || c.status}</span>
+        </div>
+      `).join('');
+  } catch(e) {
+    toast("Couldn't load job cards", true);
+  }
+}
+
+async function createJobCard(){
+  const customerName = document.getElementById('jc-customer-name').value.trim();
+  const itemDesc = document.getElementById('jc-item-desc').value.trim();
+  if (!customerName || !itemDesc) { toast('Enter customer name and item/device', true); return; }
+
+  try {
+    await api('/jobcards', {method:'POST', body: JSON.stringify({
+      owner_token: USER_TOKEN,
+      customer_name: customerName,
+      customer_phone: document.getElementById('jc-customer-phone').value.trim() || null,
+      item_description: itemDesc,
+      problem_notes: document.getElementById('jc-problem').value.trim() || null,
+      estimated_cost: parseFloat(document.getElementById('jc-estimate').value) || null,
+      advance_paid: parseFloat(document.getElementById('jc-advance').value) || 0,
+    })});
+    ['jc-customer-name','jc-customer-phone','jc-item-desc','jc-problem','jc-estimate'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('jc-advance').value = '0';
+    toast('Job card created');
+    loadJobCards();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function openJobCardDetail(jobCardId){
+  currentJobCardId = jobCardId;
+  document.getElementById('jobCardsListView').style.display = 'none';
+  document.getElementById('jobCardDetailView').style.display = 'block';
+
+  const partSelect = document.getElementById('jc-part-select');
+  partSelect.innerHTML = '<option value="">Choose a part…</option>' +
+    products.map(p => `<option value="${p.id}" data-price="${p.price}" data-gst="${p.gst_rate}">${escapeHtml(p.name)} — ${money(p.price)} (${p.stock_qty} in stock)</option>`).join('');
+
+  await refreshJobCardDetail();
+}
+
+async function refreshJobCardDetail(){
+  if (!currentJobCardId) return;
+  try {
+    const jc = await api('/jobcards/' + currentJobCardId);
+    document.getElementById('jcDetailTitle').textContent = jc.item_description;
+    document.getElementById('jcDetailMeta').innerHTML =
+      `${escapeHtml(jc.customer_name)}${jc.customer_phone ? ' · ' + escapeHtml(jc.customer_phone) : ''}` +
+      (jc.problem_notes ? `<br>${escapeHtml(jc.problem_notes)}` : '') +
+      (jc.advance_paid > 0 ? `<br>Advance collected: ${money(jc.advance_paid)}` : '');
+    document.getElementById('jc-status-select').value = jc.status;
+
+    const itemsEl = document.getElementById('jcItemsList');
+    itemsEl.innerHTML = jc.items.length === 0 ? '<div class="empty">No charges added yet.</div>' :
+      jc.items.map(i => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;font-size:13.5px;">${escapeHtml(i.description)} <span style="font-size:11px;color:var(--muted);font-weight:400;">(${i.item_type === 'part' ? 'Part' : 'Labor'})</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:13px;">${money(i.price * i.quantity)}</span>
+            <button class="btn small danger" onclick="removeJobCardItem(${i.id})">✕</button>
+          </div>
+        </div>
+      `).join('');
+    document.getElementById('jcTotal').textContent = money(jc.total);
+  } catch(e) {
+    toast("Couldn't load job card", true);
+  }
+}
+
+function onJcItemTypeChange(){
+  const isPart = document.getElementById('jc-item-type').value === 'part';
+  document.getElementById('jcPartSelectWrap').style.display = isPart ? 'block' : 'none';
+  document.getElementById('jcLaborDescWrap').style.display = isPart ? 'none' : 'block';
+  if (isPart) {
+    const partSelect = document.getElementById('jc-part-select');
+    const opt = partSelect.options[partSelect.selectedIndex];
+    if (opt && opt.dataset.price) document.getElementById('jc-item-price').value = opt.dataset.price;
+  }
+}
+
+async function addJobCardItem(){
+  const itemType = document.getElementById('jc-item-type').value;
+  const qty = parseInt(document.getElementById('jc-item-qty').value) || 1;
+  const price = parseFloat(document.getElementById('jc-item-price').value);
+  if (isNaN(price)) { toast('Enter a price', true); return; }
+
+  let payload = {item_type: itemType, quantity: qty, price, gst_rate: 18};
+  if (itemType === 'part') {
+    const partSelect = document.getElementById('jc-part-select');
+    const opt = partSelect.options[partSelect.selectedIndex];
+    if (!opt || !opt.value) { toast('Choose a part', true); return; }
+    payload.product_id = parseInt(opt.value);
+    payload.description = opt.text.split(' — ')[0];
+    payload.gst_rate = parseFloat(opt.dataset.gst);
+  } else {
+    const desc = document.getElementById('jc-item-desc-input').value.trim();
+    if (!desc) { toast('Enter a description', true); return; }
+    payload.description = desc;
+  }
+
+  try {
+    await api(`/jobcards/${currentJobCardId}/items`, {method:'POST', body: JSON.stringify(payload)});
+    document.getElementById('jc-item-desc-input').value = '';
+    document.getElementById('jc-item-price').value = '';
+    document.getElementById('jc-item-qty').value = '1';
+    refreshJobCardDetail();
+    toast('Added');
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function removeJobCardItem(itemId){
+  try {
+    await api(`/jobcards/${currentJobCardId}/items/${itemId}`, {method:'DELETE'});
+    refreshJobCardDetail();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function updateJobCardStatus(status){
+  try {
+    await api(`/jobcards/${currentJobCardId}/status?status=${status}`, {method:'PATCH'});
+    toast('Status updated');
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function finalizeJobCard(){
+  if (!confirm('Finalize this job card and generate the bill?')) return;
+  try {
+    const result = await api(`/jobcards/${currentJobCardId}/finalize`, {method:'POST'});
+    toast('Billed — ' + money(result.total_amount) + (result.due_amount > 0 ? ' (' + money(result.due_amount) + ' due)' : ''));
+    closeJobCardDetail();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+function closeJobCardDetail(){
+  currentJobCardId = null;
+  document.getElementById('jobCardDetailView').style.display = 'none';
+  document.getElementById('jobCardsListView').style.display = 'block';
+  loadJobCards();
+}
+
+// ---------- Membership (gyms, yoga studios, sports clubs) ----------
+async function loadMembersPanel(){
+  await Promise.all([loadMembershipPlans(), loadMembers()]);
+}
+
+async function loadMembershipPlans(){
+  try {
+    const plans = await api('/membership/plans?owner_token=' + encodeURIComponent(USER_TOKEN));
+    const listEl = document.getElementById('plansList');
+    listEl.innerHTML = plans.length === 0 ? '<div class="empty">No plans yet — create one above.</div>' :
+      plans.map(p => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-weight:600;font-size:13.5px;">${escapeHtml(p.name)}</div>
+            <div style="font-size:12px;color:var(--muted);">${p.duration_days} days · ${money(p.price)}</div>
+          </div>
+          <button class="btn small danger" onclick="deleteMembershipPlan(${p.id})">✕</button>
+        </div>
+      `).join('');
+
+    const select = document.getElementById('mem-plan');
+    select.innerHTML = '<option value="">Choose a plan…</option>' +
+      plans.map(p => `<option value="${p.id}">${escapeHtml(p.name)} — ${money(p.price)}</option>`).join('');
+  } catch(e) {
+    toast("Couldn't load plans", true);
+  }
+}
+
+async function createMembershipPlan(){
+  const name = document.getElementById('mp-name').value.trim();
+  const duration = parseInt(document.getElementById('mp-duration').value);
+  const price = parseFloat(document.getElementById('mp-price').value);
+  const gst = parseFloat(document.getElementById('mp-gst').value) || 0;
+  if (!name || !duration || isNaN(price)) { toast('Enter a plan name, duration, and price', true); return; }
+
+  try {
+    await api('/membership/plans', {method:'POST', body: JSON.stringify({
+      owner_token: USER_TOKEN, name, duration_days: duration, price, gst_rate: gst,
+    })});
+    document.getElementById('mp-name').value = '';
+    document.getElementById('mp-duration').value = '';
+    document.getElementById('mp-price').value = '';
+    toast('Plan created');
+    loadMembershipPlans();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function deleteMembershipPlan(planId){
+  if (!confirm('Delete this plan?')) return;
+  try {
+    await api('/membership/plans/' + planId, {method:'DELETE'});
+    loadMembershipPlans();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function enrollMember(){
+  const name = document.getElementById('mem-name').value.trim();
+  const planId = document.getElementById('mem-plan').value;
+  if (!name || !planId) { toast('Enter a member name and choose a plan', true); return; }
+
+  try {
+    await api('/membership/members', {method:'POST', body: JSON.stringify({
+      owner_token: USER_TOKEN, name, phone: document.getElementById('mem-phone').value.trim() || null,
+      plan_id: parseInt(planId), payment_mode: document.getElementById('mem-payment').value,
+    })});
+    document.getElementById('mem-name').value = '';
+    document.getElementById('mem-phone').value = '';
+    toast('Member enrolled and billed');
+    loadMembers();
+    loadDashboard();
+  } catch(e) {
+    toast(e.message, true);
+  }
+}
+
+async function loadMembers(){
+  try {
+    const members = await api('/membership/members?owner_token=' + encodeURIComponent(USER_TOKEN));
+    const listEl = document.getElementById('membersList');
+    const statusLabels = {active:'Active', expiring_soon:'Expiring Soon', expired:'Expired'};
+    const statusColors = {active:'var(--green)', expiring_soon:'#B8720C', expired:'var(--red)'};
+    listEl.innerHTML = members.length === 0 ? '<div class="empty">No members yet.</div>' : `<table>
+      <thead><tr><th>Member</th><th>Plan</th><th>Expires</th><th>Status</th><th></th></tr></thead>
+      <tbody>${members.map(m => `
+        <tr>
+          <td>${escapeHtml(m.name)}${m.phone ? '<br><span style="font-size:11.5px;color:var(--muted);">' + escapeHtml(m.phone) + '</span>' : ''}</td>
+          <td>${escapeHtml(m.plan_name)}</td>
+          <td style="font-size:12.5px;color:var(--muted);">${new Date(m.end_date).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</td>
+          <td><span style="font-size:11.5px;font-weight:700;color:${statusColors[m.status]};text-transform:uppercase;">${statusLabels[m.status]}</span></td>
+          <td><button class="btn small" style="width:auto;" onclick="renewMember(${m.id})">Renew</button></td>
+        </tr>
+      `).join('')}</tbody>
+    </table>`;
+  } catch(e) {
+    toast("Couldn't load members", true);
+  }
+}
+
+async function renewMember(memberId){
+  try {
+    const result = await api(`/membership/members/${memberId}/renew?payment_mode=cash`, {method:'POST'});
+    toast(`Renewed — new expiry ${new Date(result.end_date).toLocaleDateString('en-IN')}`);
+    loadMembers();
+    loadDashboard();
+  } catch(e) {
+    toast(e.message, true);
+  }
 }
 
 // ---------- Inventory ----------
@@ -1966,6 +2381,8 @@ function applyInventoryModeToUI(){
   const isJewelry = mode === 'jewelry';
   const isPharmacy = mode === 'pharmacy';
   const isRestaurant = mode === 'restaurant';
+  const isJobShop = mode === 'job_shop';
+  const isMembership = mode === 'membership';
 
   const heading = document.getElementById('addProductHeading');
   if (heading) heading.textContent = isService ? 'Add service' : isRestaurant ? 'Add menu item' : 'Add product';
@@ -2006,6 +2423,10 @@ function applyInventoryModeToUI(){
 
   const tablesTab = document.getElementById('tablesTabLink');
   if (tablesTab) tablesTab.style.display = isRestaurant ? 'inline-block' : 'none';
+  const jobCardsTab = document.getElementById('jobCardsTabLink');
+  if (jobCardsTab) jobCardsTab.style.display = isJobShop ? 'inline-block' : 'none';
+  const membersTab = document.getElementById('membersTabLink');
+  if (membersTab) membersTab.style.display = isMembership ? 'inline-block' : 'none';
 
   const genericWrap = document.getElementById('billItemsWrap');
   const jewelryWrap = document.getElementById('jewelryBillItemsWrap');
