@@ -769,6 +769,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const API = "https://retail-billing-system-hmq4.onrender.com";
@@ -2053,7 +2054,7 @@ function generateInvoicePDF(bill){
 
   doc.setFont('helvetica','bold'); doc.setFontSize(19);
   doc.setTextColor(255,255,255);
-  doc.text(sellerName, MARGIN + 56, headerH/2 - 6);
+  doc.text(sellerName, MARGIN + 56, headerH/2 - 6, {maxWidth: PAGE_W - MARGIN - 56 - 170});
 
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
   doc.setTextColor(200,210,225);
@@ -2088,7 +2089,7 @@ function generateInvoicePDF(bill){
 
   doc.setFont('helvetica','bold'); doc.setFontSize(11.5);
   doc.setTextColor(...dark);
-  doc.text(bill.customer_name || 'Walk-in customer', MARGIN + 16, boxTop + 38);
+  doc.text(bill.customer_name || 'Walk-in customer', MARGIN + 16, boxTop + 38, {maxWidth: colW - 32});
 
   doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
   doc.setTextColor(...muted);
@@ -2120,6 +2121,9 @@ function generateInvoicePDF(bill){
   }
 
   y = boxTop + 90 + 30;
+  doc.setDrawColor(...border);
+  doc.setLineWidth(1);
+  doc.line(MARGIN, y - 16, PAGE_W - MARGIN, y - 16);
 
   // ---- Items table ----
   if (isJewelryBill) {
@@ -2139,23 +2143,47 @@ function generateInvoicePDF(bill){
       {label:'GST AMT', x: MARGIN+670, w:55, align:'right'},
       {label:'TOTAL', x: PAGE_W-MARGIN-10, w:0, align:'right'},
     ];
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    const colBoundaries = [];
+    for (let i = 0; i < cols.length - 1; i++) {
+      const c = cols[i], next = cols[i+1];
+      const cWidth = doc.getTextWidth(c.label);
+      const nextWidth = doc.getTextWidth(next.label);
+      const cRightEdge = c.align === 'right' ? c.x : c.x + cWidth;
+      const nextLeftEdge = next.align === 'right' ? next.x - nextWidth : next.x;
+      colBoundaries.push((cRightEdge + nextLeftEdge) / 2);
+    }
+    const tableTop = y - 20;
+    const tableHeaderH = 28;
+    const productMaxW = colBoundaries[1] - cols[1].x - 8;
+
+    // Pre-measure each row's actual height first — a long product name can wrap to multiple
+    // lines, and the row (and its border) must be tall enough to contain it, not just a fixed 24pt
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    const rowData = bill.items.map(item => {
+      const displayName = item.product_name + (item.huid ? ` (HUID: ${item.huid})` : '');
+      const nameLines = doc.splitTextToSize(displayName, productMaxW);
+      const rowH = Math.max(24, nameLines.length * 13 + 10);
+      return {item, displayName: nameLines, rowH};
+    });
+    const tableBottom = tableTop + tableHeaderH + rowData.reduce((sum, r) => sum + r.rowH, 0);
+
     doc.setFillColor(...navy);
-    doc.rect(MARGIN, y - 20, CONTENT_W, 28, 'F');
+    doc.rect(MARGIN, tableTop, CONTENT_W, tableHeaderH, 'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(9);
     doc.setTextColor(255,255,255);
     cols.forEach(c => doc.text(c.label, c.x, y - 2, {align: c.align === 'right' ? 'right' : 'left'}));
 
     y += 16;
     doc.setFont('helvetica','normal'); doc.setFontSize(10);
-    bill.items.forEach((item, idx) => {
+    rowData.forEach(({item, displayName, rowH}, idx) => {
       if (idx % 2 === 1) {
         doc.setFillColor(...lightBg);
-        doc.rect(MARGIN, y - 14, CONTENT_W, 24, 'F');
+        doc.rect(MARGIN, y - 14, CONTENT_W, rowH, 'F');
       }
       doc.setTextColor(...dark);
       doc.text(String(idx+1), cols[0].x, y);
-      const displayName = item.product_name + (item.huid ? ` (HUID: ${item.huid})` : '');
-      doc.text(displayName, cols[1].x, y, {maxWidth: 175});
+      doc.text(displayName, cols[1].x, y);
       doc.setTextColor(...muted);
       doc.text(item.hsn_code || '—', cols[2].x, y, {align:'right'});
       doc.text(item.purity || '—', cols[3].x, y, {align:'right'});
@@ -2171,32 +2199,68 @@ function generateInvoicePDF(bill){
       doc.setFont('helvetica','bold');
       doc.text(item.line_total.toLocaleString('en-IN'), cols[12].x, y, {align:'right'});
       doc.setFont('helvetica','normal');
-      y += 24;
+      y += rowH;
     });
+
+    // Grid lines — vertical dividers between every column, plus outer border
+    doc.setLineWidth(0.75);
+    colBoundaries.forEach(bx => {
+      doc.setDrawColor(255,255,255);
+      doc.line(bx, tableTop, bx, tableTop + tableHeaderH);
+      doc.setDrawColor(...border);
+      doc.line(bx, tableTop + tableHeaderH, bx, tableBottom);
+    });
+    doc.setDrawColor(200,210,222);
+    doc.setLineWidth(1);
+    doc.rect(MARGIN, tableTop, CONTENT_W, tableBottom - tableTop);
   } else {
+  const cols = [{label:'ITEM', x: MARGIN+10, align:'left'}];
+  if (isGstBill) cols.push({label:'HSN', x: MARGIN+230, align:'right'});
+  cols.push({label:'QTY', x: MARGIN+268, align:'right'});
+  cols.push({label:'RATE', x: MARGIN+315, align:'right'});
+  if (isGstBill) {
+    cols.push({label:'TAXABLE', x: MARGIN+380, align:'right'});
+    cols.push({label:'GST', x: MARGIN+420, align:'right'});
+  }
+  cols.push({label:'AMOUNT', x: PAGE_W-MARGIN-10, align:'right'});
+
+  const tableTop = y - 18;
+  const headerH = 24;
+
   doc.setFillColor(...navy);
-  doc.rect(MARGIN, y - 18, CONTENT_W, 24, 'F');
+  doc.rect(MARGIN, tableTop, CONTENT_W, headerH, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
   doc.setTextColor(255,255,255);
-  doc.text('ITEM', MARGIN + 10, y - 2);
-  if (isGstBill) doc.text('HSN', MARGIN + 230, y - 2, {align:'right'});
-  doc.text('QTY', MARGIN + 268, y - 2, {align:'right'});
-  doc.text('RATE', MARGIN + 315, y - 2, {align:'right'});
-  if (isGstBill) {
-    doc.text('TAXABLE', MARGIN + 380, y - 2, {align:'right'});
-    doc.text('GST', MARGIN + 420, y - 2, {align:'right'});
+  cols.forEach(c => doc.text(c.label, c.x, y - 2, {align: c.align === 'right' ? 'right' : 'left'}));
+
+  const colBoundaries = [];
+  for (let i = 0; i < cols.length - 1; i++) {
+    const c = cols[i], next = cols[i+1];
+    const cWidth = doc.getTextWidth(c.label);
+    const nextWidth = doc.getTextWidth(next.label);
+    const cRightEdge = c.align === 'right' ? c.x : c.x + cWidth;
+    const nextLeftEdge = next.align === 'right' ? next.x - nextWidth : next.x;
+    colBoundaries.push((cRightEdge + nextLeftEdge) / 2);
   }
-  doc.text('AMOUNT', PAGE_W - MARGIN - 10, y - 2, {align:'right'});
+  const productMaxW = colBoundaries[0] - (MARGIN+10) - 8;
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  const rowData = bill.items.map(item => {
+    const nameLines = doc.splitTextToSize(item.product_name, productMaxW);
+    const rowH = Math.max(22, nameLines.length * 13 + 9);
+    return {item, nameLines, rowH};
+  });
+  const tableBottom = tableTop + headerH + rowData.reduce((sum, r) => sum + r.rowH, 0);
 
   y += 14;
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
-  bill.items.forEach((item, idx) => {
+  rowData.forEach(({item, nameLines, rowH}, idx) => {
     if (idx % 2 === 1) {
       doc.setFillColor(...lightBg);
-      doc.rect(MARGIN, y - 13, CONTENT_W, 22, 'F');
+      doc.rect(MARGIN, y - 13, CONTENT_W, rowH, 'F');
     }
     doc.setTextColor(...dark);
-    doc.text(item.product_name, MARGIN + 10, y, {maxWidth: 190});
+    doc.text(nameLines, MARGIN + 10, y);
     doc.setTextColor(...muted);
     if (isGstBill) doc.text(item.hsn_code || '—', MARGIN + 230, y, {align:'right'});
     doc.text(String(item.quantity), MARGIN + 268, y, {align:'right'});
@@ -2209,8 +2273,19 @@ function generateInvoicePDF(bill){
     doc.setFont('helvetica','bold');
     doc.text('Rs. '+item.line_total.toLocaleString('en-IN'), PAGE_W - MARGIN - 10, y, {align:'right'});
     doc.setFont('helvetica','normal');
-    y += 22;
+    y += rowH;
   });
+
+  doc.setLineWidth(0.75);
+  colBoundaries.forEach(bx => {
+    doc.setDrawColor(255,255,255);
+    doc.line(bx, tableTop, bx, tableTop + headerH);
+    doc.setDrawColor(...border);
+    doc.line(bx, tableTop + headerH, bx, tableBottom);
+  });
+  doc.setDrawColor(200,210,222);
+  doc.setLineWidth(1);
+  doc.rect(MARGIN, tableTop, CONTENT_W, tableBottom - tableTop);
   }
 
   doc.setDrawColor(...border);
@@ -2293,7 +2368,7 @@ function generateInvoicePDF(bill){
 
   y += 4;
   doc.setFillColor(...navy);
-  doc.roundedRect(sumX - 14, y - 14, sumValX - sumX + 24, 30, 5, 5, 'F');
+  doc.roundedRect(sumX - 14, y - 14, sumValX - sumX + 28, 30, 5, 5, 'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(12.5);
   doc.setTextColor(255,255,255);
   doc.text('Total', sumX, y + 6);
@@ -2338,11 +2413,50 @@ function generateInvoicePDF(bill){
     ly += 14;
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
     doc.setTextColor(...muted);
-    if (cachedBankName) { doc.text('Bank: ' + cachedBankName, col1X, ly); ly += 12; }
-    if (cachedBankAccount) { doc.text('A/C No: ' + cachedBankAccount, col1X, ly); ly += 12; }
-    if (cachedBankIfsc) { doc.text('IFSC: ' + cachedBankIfsc, col1X, ly); ly += 12; }
-    if (cachedUpiId) { doc.text('UPI ID: ' + cachedUpiId, col1X, ly); ly += 12; }
+    const bankLine = (label, value) => {
+      const maxW = 100;
+      let text = label + value;
+      if (doc.getTextWidth(text) > maxW) {
+        while (doc.getTextWidth(text + '…') > maxW && text.length > 0) text = text.slice(0, -1);
+        text += '…';
+      }
+      doc.text(text, col1X, ly);
+      ly += 11;
+    };
+    if (cachedBankName) bankLine('Bank: ', cachedBankName);
+    if (cachedBankAccount) bankLine('A/C No: ', cachedBankAccount);
+    if (cachedBankIfsc) bankLine('IFSC: ', cachedBankIfsc);
+    if (cachedUpiId) bankLine('UPI ID: ', cachedUpiId);
     maxContentY = Math.max(maxContentY, ly);
+
+    // Real scannable UPI QR code, drawn directly as filled squares — placed to the right
+    // of the bank text so it uses the column's width rather than adding more height
+    if (cachedUpiId && typeof qrcode === 'function') {
+      try {
+        const upiString = `upi://pay?pa=${cachedUpiId}&pn=${encodeURIComponent(sellerName)}&am=${bill.total_amount}&cu=INR`;
+        const qr = qrcode(0, 'M');
+        qr.addData(upiString);
+        qr.make();
+        const moduleCount = qr.getModuleCount();
+        const qrSize = 48;
+        const qrX = col1X + 110, qrY = bottomY + 18;
+        const cellSize = qrSize / moduleCount;
+        doc.setFillColor(255,255,255);
+        doc.rect(qrX - 3, qrY - 3, qrSize + 6, qrSize + 6, 'F');
+        doc.setFillColor(20,20,20);
+        for (let row = 0; row < moduleCount; row++) {
+          for (let col = 0; col < moduleCount; col++) {
+            if (qr.isDark(row, col)) {
+              doc.rect(qrX + col * cellSize, qrY + row * cellSize, cellSize, cellSize, 'F');
+            }
+          }
+        }
+        doc.setFont('helvetica','normal'); doc.setFontSize(7);
+        doc.setTextColor(...muted);
+        doc.text('Scan to pay via UPI', qrX + qrSize/2, qrY + qrSize + 10, {align:'center'});
+        maxContentY = Math.max(maxContentY, qrY + qrSize + 16);
+      } catch(e) { /* QR is a nice-to-have — bank details text above still covers payment info either way */ }
+    }
   }
 
   // Column 2: Declaration
@@ -2369,7 +2483,7 @@ function generateInvoicePDF(bill){
   // Column 3: Signature block
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
   doc.setTextColor(...muted);
-  doc.text('For ' + sellerName, col3X, bottomY + 20, {align:'right'});
+  doc.text('For ' + sellerName, col3X, bottomY + 20, {align:'right', maxWidth: 150});
   doc.setDrawColor(...border);
   doc.line(col3X - 130, bottomY + 65, col3X, bottomY + 65);
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
