@@ -298,7 +298,7 @@
 
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
           <h3 style="font-size:15px;">Bulk upload (Excel/CSV)</h3>
-          <p style="font-size:12.5px;color:var(--muted);margin-top:-8px;margin-bottom:12px;">Columns: <b>name</b>, <b>price</b>, <b>stock_qty</b>, <b>gst_rate</b> (header names, any order)</p>
+          <p id="excelColumnsHint" style="font-size:12.5px;color:var(--muted);margin-top:-8px;margin-bottom:12px;">Columns: <b>name</b>, <b>price</b>, <b>stock_qty</b>, <b>gst_rate</b> (header names, any order)</p>
           <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="padding:8px;font-size:13px;">
           <button class="btn secondary" id="uploadExcelBtn" style="margin-top:10px;">Upload & import</button>
           <div id="excelStatus" style="font-size:12.5px;color:var(--muted);margin-top:10px;"></div>
@@ -1475,9 +1475,43 @@ document.getElementById('uploadExcelBtn').addEventListener('click', async () => 
       const hsnCode = (hsnRaw !== undefined && hsnRaw !== '') ? String(hsnRaw) : null;
       if (!name || isNaN(price)) { failed++; continue; }
 
+      const payload = {name: String(name), price, stock_qty: stock, gst_rate: finalGst, hsn_code: hsnCode, owner_token: USER_TOKEN};
+
+      // Jewelry-specific columns — only applied when this business is in jewelry mode
+      if (cachedBillingMode === 'jewelry') {
+        const purity = r.purity || r.karat;
+        payload.purity = (purity !== undefined && purity !== '') ? String(purity) : null;
+        payload.making_charge_type = r.making_charge_type || r.making_type || 'percent';
+        payload.making_charge_value = parseFloat(r.making_charge_value || r.making_charge || r.making) || 0;
+        payload.wastage_percent = parseFloat(r.wastage_percent || r.wastage) || 0;
+        const huid = r.huid || r.hallmark;
+        payload.huid = (huid !== undefined && huid !== '') ? String(huid) : null;
+      }
+
+      // Pharmacy-specific columns — only applied when this business is in pharmacy mode
+      if (cachedBillingMode === 'pharmacy') {
+        const batch = r.batch_number || r.batch;
+        payload.batch_number = (batch !== undefined && batch !== '') ? String(batch) : null;
+        const expiryRaw = r.expiry_date || r.expiry;
+        if (expiryRaw) {
+          // Excel dates can arrive as serial numbers or text — normalize both to YYYY-MM-DD
+          let expiryDate = null;
+          if (typeof expiryRaw === 'number') {
+            const parsed = XLSX.SSF.parse_date_code(expiryRaw);
+            if (parsed) expiryDate = `${parsed.y}-${String(parsed.m).padStart(2,'0')}-${String(parsed.d).padStart(2,'0')}`;
+          } else {
+            const parsed = new Date(expiryRaw);
+            if (!isNaN(parsed)) expiryDate = parsed.toISOString().split('T')[0];
+          }
+          payload.expiry_date = expiryDate ? expiryDate + 'T00:00:00' : null;
+        }
+        const scheduleHRaw = String(r.schedule_h || r.is_schedule_h || '').trim().toLowerCase();
+        payload.is_schedule_h = ['yes','y','true','1'].includes(scheduleHRaw);
+      }
+
       statusEl.textContent = `Uploading ${i+1} of ${normalizedRows.length}…`;
       try {
-        await api('/products', {method:'POST', body: JSON.stringify({name: String(name), price, stock_qty: stock, gst_rate: finalGst, hsn_code: hsnCode, owner_token: USER_TOKEN})});
+        await api('/products', {method:'POST', body: JSON.stringify(payload)});
         success++;
       } catch(e) {
         failed++;
@@ -1989,16 +2023,43 @@ function generateInvoicePDF(bill){
       doc.text('Rs. '+bill.total_igst.toLocaleString('en-IN'), sumValX, y, {align:'right'});
       y += 16;
     } else {
-      doc.setTextColor(...muted);
-      doc.text('CGST', sumX, y);
-      doc.setTextColor(...dark);
-      doc.text('Rs. '+bill.total_cgst.toLocaleString('en-IN'), sumValX, y, {align:'right'});
-      y += 16;
-      doc.setTextColor(...muted);
-      doc.text('SGST', sumX, y);
-      doc.setTextColor(...dark);
-      doc.text('Rs. '+bill.total_sgst.toLocaleString('en-IN'), sumValX, y, {align:'right'});
-      y += 16;
+      // Group tax by rate — a jewelry bill mixes 3% (gold) and 5% (making charges) lines, so a single
+      // blended CGST/SGST figure would hide the actual rates. Show one CGST/SGST pair per distinct rate.
+      const rateGroups = {};
+      (bill.items || []).forEach(item => {
+        const rate = item.gst_rate || 0;
+        rateGroups[rate] = (rateGroups[rate] || 0) + (item.tax_amount || 0);
+      });
+      const distinctRates = Object.keys(rateGroups).map(Number).filter(r => r > 0).sort((a,b) => a-b);
+
+      if (distinctRates.length > 1) {
+        distinctRates.forEach(rate => {
+          const half = rateGroups[rate] / 2;
+          doc.setTextColor(...muted);
+          doc.text(`CGST @${(rate/2).toFixed(2).replace(/\.?0+$/,'')}%`, sumX, y);
+          doc.setTextColor(...dark);
+          doc.text('Rs. '+half.toLocaleString('en-IN', {maximumFractionDigits:2}), sumValX, y, {align:'right'});
+          y += 16;
+          doc.setTextColor(...muted);
+          doc.text(`SGST @${(rate/2).toFixed(2).replace(/\.?0+$/,'')}%`, sumX, y);
+          doc.setTextColor(...dark);
+          doc.text('Rs. '+half.toLocaleString('en-IN', {maximumFractionDigits:2}), sumValX, y, {align:'right'});
+          y += 16;
+        });
+      } else {
+        const rate = distinctRates[0] || 0;
+        const ratePart = rate > 0 ? ` @${(rate/2).toFixed(2).replace(/\.?0+$/,'')}%` : '';
+        doc.setTextColor(...muted);
+        doc.text('CGST'+ratePart, sumX, y);
+        doc.setTextColor(...dark);
+        doc.text('Rs. '+bill.total_cgst.toLocaleString('en-IN'), sumValX, y, {align:'right'});
+        y += 16;
+        doc.setTextColor(...muted);
+        doc.text('SGST'+ratePart, sumX, y);
+        doc.setTextColor(...dark);
+        doc.text('Rs. '+bill.total_sgst.toLocaleString('en-IN'), sumValX, y, {align:'right'});
+        y += 16;
+      }
     }
   }
 
@@ -2420,6 +2481,17 @@ function applyInventoryModeToUI(){
   const inputNameEl = document.getElementById('p-name');
   if (inputNameEl) inputNameEl.placeholder = isService ? 'e.g. Haircut & Styling' : isJewelry ? 'e.g. Gold Necklace' :
     isPharmacy ? 'e.g. Paracetamol 500mg' : isRestaurant ? 'e.g. Butter Chicken' : 'e.g. Basmati Rice 5kg';
+
+  const excelHint = document.getElementById('excelColumnsHint');
+  if (excelHint) {
+    if (isJewelry) {
+      excelHint.innerHTML = 'Columns: <b>name</b>, <b>price</b> (rate/gram), <b>purity</b>, <b>making_charge_type</b> (percent/per_gram/flat), <b>making_charge_value</b>, <b>wastage_percent</b>, <b>huid</b> (optional)';
+    } else if (isPharmacy) {
+      excelHint.innerHTML = 'Columns: <b>name</b>, <b>price</b>, <b>stock_qty</b>, <b>gst_rate</b>, <b>batch_number</b>, <b>expiry_date</b>, <b>schedule_h</b> (yes/no)';
+    } else {
+      excelHint.innerHTML = 'Columns: <b>name</b>, <b>price</b>, <b>stock_qty</b>, <b>gst_rate</b> (header names, any order)';
+    }
+  }
 
   const tablesTab = document.getElementById('tablesTabLink');
   if (tablesTab) tablesTab.style.display = isRestaurant ? 'inline-block' : 'none';
