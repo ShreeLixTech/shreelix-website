@@ -281,8 +281,6 @@
           <input id="p-making-value" type="number" min="0" step="0.01" placeholder="e.g. 12 for 12%, or ₹500 for flat">
           <label for="p-wastage">Wastage %</label>
           <input id="p-wastage" type="number" min="0" step="0.01" placeholder="e.g. 2">
-          <label for="p-huid">HUID / Hallmark number <span style="font-weight:400;color:var(--muted);">(optional)</span></label>
-          <input id="p-huid" placeholder="e.g. AZ4B7C21">
           <div class="hint">Price above is a starting rate per gram — if you set "Today's rate" for this purity above, that live rate is used automatically at billing time instead, so you don't need to edit this on every item when the market moves.</div>
         </div>
 
@@ -821,7 +819,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
     if (tab.dataset.tab === 'billing') {
-      if (cachedBillingMode === 'jewelry') renderJewelryBillLines(products);
+      if (cachedBillingMode === 'jewelry') loadMetalRates().then(() => renderJewelryBillLines(products));
       else if (cachedBillingMode === 'pharmacy') renderPharmacyBillLines(products);
       else renderBillLines();
     }
@@ -1269,19 +1267,29 @@ async function renewMember(memberId){
 }
 
 // ---------- Jewelry: Today's Rates ----------
+let cachedMetalRates = {}; // normalized (trimmed, lowercased) purity -> rate per gram
+
 async function loadMetalRates(){
   try {
     const rates = await api('/jewelry/rates?owner_token=' + encodeURIComponent(USER_TOKEN));
+    cachedMetalRates = {};
+    rates.forEach(r => { cachedMetalRates[r.metal_type.trim().toLowerCase()] = r.rate_per_gram; });
     const listEl = document.getElementById('metalRatesList');
     if (!listEl) return;
-    listEl.innerHTML = rates.length === 0 ? '<div class="hint">No daily rates set yet — items will use their own stored price until you set one here.</div>' :
+    listEl.innerHTML = rates.length === 0 ? '<div class="hint">No daily rates set yet — set one below before billing any jewelry item.</div>' :
       rates.map(r => `
         <div style="display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:6px 14px;margin:0 8px 8px 0;font-size:12.5px;">
           <b>${escapeHtml(r.metal_type)}</b>: ${money(r.rate_per_gram)}/g
           <span style="color:var(--muted-soft);font-size:11px;">${new Date(r.updated_at).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</span>
         </div>
       `).join('');
-  } catch(e) { /* non-critical — jewelry billing still works via each product's own stored price */ }
+  } catch(e) { /* non-critical for the Inventory display — billing itself will show a clear error if a rate is missing */ }
+}
+
+function getLiveRateForPurity(purity){
+  if (!purity) return null;
+  const rate = cachedMetalRates[purity.trim().toLowerCase()];
+  return rate === undefined ? null : rate;
 }
 
 async function setMetalRate(){
@@ -1361,7 +1369,6 @@ document.getElementById('addProductBtn').addEventListener('click', async () => {
     payload.making_charge_type = document.getElementById('p-making-type').value;
     payload.making_charge_value = parseFloat(document.getElementById('p-making-value').value) || 0;
     payload.wastage_percent = parseFloat(document.getElementById('p-wastage').value) || 0;
-    payload.huid = document.getElementById('p-huid').value.trim() || null;
   }
   if (cachedBillingMode === 'pharmacy') {
     payload.batch_number = document.getElementById('p-batch').value.trim() || null;
@@ -1384,7 +1391,6 @@ document.getElementById('addProductBtn').addEventListener('click', async () => {
       document.getElementById('p-purity').value = '';
       document.getElementById('p-making-value').value = '';
       document.getElementById('p-wastage').value = '';
-      document.getElementById('p-huid').value = '';
     }
     if (cachedBillingMode === 'pharmacy') {
       document.getElementById('p-batch').value = '';
@@ -1836,13 +1842,18 @@ function renderJewelryBillLines(products){
   if (!wrap) return;
   wrap.innerHTML = jewelryBillLines.map((line, idx) => {
     const product = products.find(p => p.id === line.product_id);
+    const liveRate = product ? getLiveRateForPurity(product.purity) : null;
     return `
       <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;margin-bottom:10px;align-items:end;">
         <div>
           <label style="font-size:11.5px;">Item</label>
           <select onchange="jewelryBillLines[${idx}].product_id=parseInt(this.value)||null;renderJewelryBillLines(products);">
             <option value="">Choose…</option>
-            ${products.map(p => `<option value="${p.id}" ${p.id===line.product_id?'selected':''}>${escapeHtml(p.name)} (${p.purity||''}, ₹${p.price}/g)</option>`).join('')}
+            ${products.map(p => {
+              const r = getLiveRateForPurity(p.purity);
+              const rateLabel = r !== null ? '₹'+r+'/g' : 'no rate set';
+              return `<option value="${p.id}" ${p.id===line.product_id?'selected':''}>${escapeHtml(p.name)} (${p.purity||'—'}, ${rateLabel})</option>`;
+            }).join('')}
           </select>
         </div>
         <div>
@@ -1855,10 +1866,20 @@ function renderJewelryBillLines(products){
         </div>
         <button class="btn small danger" style="margin-top:20px;" onclick="jewelryBillLines.splice(${idx},1);renderJewelryBillLines(products);">✕</button>
       </div>
-      ${product ? `<div class="hint" style="margin-top:-6px;margin-bottom:10px;">Making: ${product.making_charge_type==='percent'?product.making_charge_value+'%':product.making_charge_type==='per_gram'?'₹'+product.making_charge_value+'/g (on net weight)':'₹'+product.making_charge_value+' flat'} · Metal is charged on gross weight; making charge is charged on net weight (gross − stone)</div>` : ''}
+      <label style="font-size:11.5px;">HUID / Hallmark number for this piece <span style="font-weight:400;color:var(--muted);">(optional — unique per physical piece)</span></label>
+      <input style="margin-bottom:8px;" placeholder="e.g. AZ4B7C21" value="${line.huid || ''}" oninput="jewelryBillLines[${idx}].huid=this.value.trim()||null;">
+      ${product ? `<div class="hint" style="margin-top:-4px;margin-bottom:10px;">
+        Making: ${product.making_charge_type==='percent'?product.making_charge_value+'%':product.making_charge_type==='per_gram'?'₹'+product.making_charge_value+'/g (on net weight)':'₹'+product.making_charge_value+' flat'}
+        ${liveRate === null ? ` · <span style="color:var(--red);font-weight:600;">No rate set for "${escapeHtml(product.purity||'')}" — set Today's Rate first, this item can't be billed yet</span>` : ` · Using today's rate: ₹${liveRate}/g`}
+      </div>` : ''}
     `;
   }).join('');
   updateJewelryBillTotal(products);
+}
+
+function addJewelryBillLine(){
+  jewelryBillLines.push({product_id: null, weight_grams: 0, stone_weight_grams: 0, huid: null});
+  renderJewelryBillLines(products);
 }
 
 function updateJewelryBillTotal(products){
@@ -1866,8 +1887,10 @@ function updateJewelryBillTotal(products){
   jewelryBillLines.forEach(line => {
     const product = products.find(p => p.id === line.product_id);
     if (!product || !line.weight_grams) return;
+    const liveRate = getLiveRateForPurity(product.purity);
+    if (liveRate === null) return; // can't estimate without a real rate — the red warning above already flags this
     const netWeight = Math.max(0, line.weight_grams - (line.stone_weight_grams || 0));
-    const metalValue = product.price * line.weight_grams;
+    const metalValue = liveRate * line.weight_grams;
     const makingType = product.making_charge_type || 'per_gram';
     const makingValue = product.making_charge_value || 0;
     let makingCharge = 0;
@@ -1882,15 +1905,10 @@ function updateJewelryBillTotal(products){
   if (totalEl) totalEl.textContent = money(total);
 }
 
-function addJewelryBillLine(){
-  jewelryBillLines.push({product_id: null, weight_grams: 0, stone_weight_grams: 0});
-  renderJewelryBillLines(products);
-}
-
 async function createJewelryBill(){
   if (!(await consumeToken())) return;
   const items = jewelryBillLines.filter(l => l.product_id && l.weight_grams > 0).map(l => ({
-    product_id: l.product_id, weight_grams: l.weight_grams, stone_weight_grams: l.stone_weight_grams || 0, quantity: 1,
+    product_id: l.product_id, weight_grams: l.weight_grams, stone_weight_grams: l.stone_weight_grams || 0, quantity: 1, huid: l.huid || null,
   }));
   if (items.length === 0) { toast('Add at least one item with a weight', true); return; }
 
@@ -2124,13 +2142,14 @@ function generateInvoicePDF(bill){
       }
       doc.setTextColor(...dark);
       doc.text(String(idx+1), cols[0].x, y);
-      doc.text(item.product_name, cols[1].x, y, {maxWidth: 96});
+      const displayName = item.product_name + (item.huid ? ` (HUID: ${item.huid})` : '');
+      doc.text(displayName, cols[1].x, y, {maxWidth: 96});
       doc.setTextColor(...muted);
       doc.text(item.hsn_code || '—', cols[2].x, y, {align:'right'});
       doc.text(item.purity || '—', cols[3].x, y, {align:'right'});
       doc.text((item.gross_weight ?? 0).toString(), cols[4].x, y, {align:'right'});
       doc.text((item.stone_weight ?? 0).toString(), cols[5].x, y, {align:'right'});
-      doc.text((item.making_charge_rate ?? 0).toLocaleString('en-IN'), cols[6].x, y, {align:'right'});
+      doc.text((item.making_charge_amount ?? 0).toLocaleString('en-IN'), cols[6].x, y, {align:'right'});
       doc.text((item.net_weight ?? item.gross_weight ?? 0).toString(), cols[7].x, y, {align:'right'});
       doc.text(item.unit_price.toLocaleString('en-IN'), cols[8].x, y, {align:'right'});
       doc.text(item.taxable_value.toLocaleString('en-IN'), cols[9].x, y, {align:'right'});
