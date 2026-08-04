@@ -243,7 +243,8 @@
       <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
         <div style="flex:1;min-width:140px;">
           <label for="mr-metal-type">Purity / Metal</label>
-          <input id="mr-metal-type" placeholder="e.g. 22K, 18K, Silver">
+          <select id="mr-metal-type"></select>
+          <div class="hint">Only purities already used in your inventory show here — add the purity on a product first if you don't see it.</div>
         </div>
         <div style="flex:1;min-width:140px;">
           <label for="mr-rate">Rate per gram (₹)</label>
@@ -1292,6 +1293,17 @@ function getLiveRateForPurity(purity){
   return rate === undefined ? null : rate;
 }
 
+function populatePurityDropdown(){
+  const select = document.getElementById('mr-metal-type');
+  if (!select) return;
+  const previousValue = select.value;
+  const purities = [...new Set(products.map(p => p.purity).filter(Boolean))].sort();
+  select.innerHTML = purities.length === 0
+    ? '<option value="">Add a purity to a product first</option>'
+    : purities.map(p => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join('');
+  if (purities.includes(previousValue)) select.value = previousValue;
+}
+
 async function setMetalRate(){
   const metalType = document.getElementById('mr-metal-type').value.trim();
   const rate = parseFloat(document.getElementById('mr-rate').value);
@@ -1313,6 +1325,7 @@ async function loadInventory(){
   if (cachedBillingMode === 'jewelry') loadMetalRates();
   try {
     products = await api('/products?owner_token=' + encodeURIComponent(USER_TOKEN));
+    if (cachedBillingMode === 'jewelry') populatePurityDropdown();
     if (products.length === 0) {
       wrap.innerHTML = `<div class="empty"><div class="big">📦</div>No products yet — add your first item on the left.</div>`;
       return;
@@ -2012,7 +2025,8 @@ document.getElementById('createBillBtn').addEventListener('click', () => {
 
 function generateInvoicePDF(bill){
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'pt', format:'a4'});
+  const isJewelryBill = (bill.items || []).some(item => item.purity || item.gross_weight);
+  const doc = new jsPDF({unit:'pt', format: isJewelryBill ? [842, 595] : 'a4', orientation: isJewelryBill ? 'landscape' : 'portrait'});
   const navy = [11,31,58];
   const blue = [30,144,255];
   const muted = [100,116,139];
@@ -2023,7 +2037,7 @@ function generateInvoicePDF(bill){
   const dark = [30,41,59];
   const isGstBill = (bill.total_cgst > 0 || bill.total_sgst > 0 || bill.total_igst > 0);
   const sellerName = bill.business_name || 'Your Business';
-  const PAGE_W = 595, PAGE_H = 842, MARGIN = 42, CONTENT_W = PAGE_W - MARGIN*2;
+  const PAGE_W = isJewelryBill ? 842 : 595, PAGE_H = isJewelryBill ? 595 : 842, MARGIN = 42, CONTENT_W = PAGE_W - MARGIN*2;
 
   // ---- Letterhead: navy band, logo initial, business name, invoice title ----
   const headerH = 92;
@@ -2108,42 +2122,40 @@ function generateInvoicePDF(bill){
   y = boxTop + 90 + 30;
 
   // ---- Items table ----
-  const isJewelryBill = (bill.items || []).some(item => item.purity || item.gross_weight);
-
   if (isJewelryBill) {
     // Dedicated jewelry table: Product, HSN, Purity, Weight, Stone, Making Charge, Net Wt, Rate, Taxable, GST%, GST Amt, Total
     const cols = [
-      {label:'#', x: MARGIN+8, w:16, align:'left'},
-      {label:'PRODUCT', x: MARGIN+24, w:105, align:'left'},
-      {label:'HSN', x: MARGIN+153, w:28, align:'right'},
-      {label:'PURITY', x: MARGIN+183, w:28, align:'right'},
-      {label:'WT (G)', x: MARGIN+211, w:24, align:'right'},
-      {label:'STONE', x: MARGIN+236, w:24, align:'right'},
-      {label:'MKG CHG', x: MARGIN+273, w:36, align:'right'},
-      {label:'NET WT', x: MARGIN+303, w:28, align:'right'},
-      {label:'RATE', x: MARGIN+343, w:38, align:'right'},
-      {label:'TAXABLE', x: MARGIN+393, w:48, align:'right'},
-      {label:'GST%', x: MARGIN+418, w:22, align:'right'},
-      {label:'GST AMT', x: MARGIN+463, w:42, align:'right'},
-      {label:'TOTAL', x: PAGE_W-MARGIN-8, w:0, align:'right'},
+      {label:'#', x: MARGIN+10, w:18, align:'left'},
+      {label:'PRODUCT', x: MARGIN+30, w:180, align:'left'},
+      {label:'HSN', x: MARGIN+225, w:40, align:'right'},
+      {label:'PURITY', x: MARGIN+270, w:40, align:'right'},
+      {label:'GROSS WT', x: MARGIN+330, w:55, align:'right'},
+      {label:'STONE', x: MARGIN+375, w:40, align:'right'},
+      {label:'MAKING', x: MARGIN+425, w:45, align:'right'},
+      {label:'NET WT', x: MARGIN+470, w:40, align:'right'},
+      {label:'RATE', x: MARGIN+515, w:40, align:'right'},
+      {label:'TAXABLE', x: MARGIN+580, w:60, align:'right'},
+      {label:'GST%', x: MARGIN+610, w:25, align:'right'},
+      {label:'GST AMT', x: MARGIN+670, w:55, align:'right'},
+      {label:'TOTAL', x: PAGE_W-MARGIN-10, w:0, align:'right'},
     ];
     doc.setFillColor(...navy);
-    doc.rect(MARGIN, y - 18, CONTENT_W, 24, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(6.8);
+    doc.rect(MARGIN, y - 20, CONTENT_W, 28, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
     doc.setTextColor(255,255,255);
     cols.forEach(c => doc.text(c.label, c.x, y - 2, {align: c.align === 'right' ? 'right' : 'left'}));
 
-    y += 14;
-    doc.setFont('helvetica','normal'); doc.setFontSize(8);
+    y += 16;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
     bill.items.forEach((item, idx) => {
       if (idx % 2 === 1) {
         doc.setFillColor(...lightBg);
-        doc.rect(MARGIN, y - 13, CONTENT_W, 20, 'F');
+        doc.rect(MARGIN, y - 14, CONTENT_W, 24, 'F');
       }
       doc.setTextColor(...dark);
       doc.text(String(idx+1), cols[0].x, y);
       const displayName = item.product_name + (item.huid ? ` (HUID: ${item.huid})` : '');
-      doc.text(displayName, cols[1].x, y, {maxWidth: 96});
+      doc.text(displayName, cols[1].x, y, {maxWidth: 175});
       doc.setTextColor(...muted);
       doc.text(item.hsn_code || '—', cols[2].x, y, {align:'right'});
       doc.text(item.purity || '—', cols[3].x, y, {align:'right'});
@@ -2159,7 +2171,7 @@ function generateInvoicePDF(bill){
       doc.setFont('helvetica','bold');
       doc.text(item.line_total.toLocaleString('en-IN'), cols[12].x, y, {align:'right'});
       doc.setFont('helvetica','normal');
-      y += 20;
+      y += 24;
     });
   } else {
   doc.setFillColor(...navy);
@@ -2177,7 +2189,7 @@ function generateInvoicePDF(bill){
   doc.text('AMOUNT', PAGE_W - MARGIN - 10, y - 2, {align:'right'});
 
   y += 14;
-  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
   bill.items.forEach((item, idx) => {
     if (idx % 2 === 1) {
       doc.setFillColor(...lightBg);
@@ -2303,68 +2315,75 @@ function generateInvoicePDF(bill){
   if (bill.notes) {
     doc.setFont('helvetica','italic'); doc.setFontSize(9);
     doc.setTextColor(...muted);
-    doc.text('Note: ' + bill.notes, MARGIN, y + 10, {maxWidth: CONTENT_W - 200});
-    y += 10;
+    const noteLines = doc.splitTextToSize('Note: ' + bill.notes, CONTENT_W - 200);
+    doc.text(noteLines, MARGIN, y + 10);
+    y += 10 + noteLines.length * 11;
   }
 
   // ---- Bank Details, Terms & Declaration, Signature — fixed position near the bottom ----
-  const bottomY = Math.max(y + 40, 610);
+  const bottomY = y + 40;
   doc.setDrawColor(...border);
   doc.line(MARGIN, bottomY, PAGE_W - MARGIN, bottomY);
 
-  const leftColW = CONTENT_W * 0.58;
-  let ly = bottomY + 22;
   const hasBankDetails = cachedBankName || cachedBankAccount || cachedUpiId;
+  const col1X = MARGIN, col2X = MARGIN + CONTENT_W * 0.37, col3X = PAGE_W - MARGIN;
+  let maxContentY = bottomY;
 
+  // Column 1: Bank Details
   if (hasBankDetails) {
+    let ly = bottomY + 20;
     doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
     doc.setTextColor(...dark);
-    doc.text('Bank Details', MARGIN, ly);
-    ly += 15;
+    doc.text('Bank Details', col1X, ly);
+    ly += 14;
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
     doc.setTextColor(...muted);
-    if (cachedBankName) { doc.text('Bank: ' + cachedBankName, MARGIN, ly); ly += 12; }
-    if (cachedBankAccount) { doc.text('A/C No: ' + cachedBankAccount, MARGIN, ly); ly += 12; }
-    if (cachedBankIfsc) { doc.text('IFSC: ' + cachedBankIfsc, MARGIN, ly); ly += 12; }
-    if (cachedUpiId) { doc.text('UPI ID: ' + cachedUpiId, MARGIN, ly); ly += 12; }
-    ly += 8;
+    if (cachedBankName) { doc.text('Bank: ' + cachedBankName, col1X, ly); ly += 12; }
+    if (cachedBankAccount) { doc.text('A/C No: ' + cachedBankAccount, col1X, ly); ly += 12; }
+    if (cachedBankIfsc) { doc.text('IFSC: ' + cachedBankIfsc, col1X, ly); ly += 12; }
+    if (cachedUpiId) { doc.text('UPI ID: ' + cachedUpiId, col1X, ly); ly += 12; }
+    maxContentY = Math.max(maxContentY, ly);
   }
 
+  // Column 2: Declaration
+  let ly2 = bottomY + 20;
   doc.setFont('helvetica','bold'); doc.setFontSize(9.5);
   doc.setTextColor(...dark);
-  doc.text('Declaration', MARGIN, ly);
-  ly += 14;
+  doc.text('Declaration', col2X, ly2);
+  ly2 += 14;
   doc.setFont('helvetica','normal'); doc.setFontSize(7.8);
   doc.setTextColor(...muted);
   const terms = [
-    'Goods once sold will not be taken back or exchanged, unless defective.',
+    'Goods once sold will not be exchanged, unless defective.',
     'Payment once made will not be refunded.',
-    'Please verify all items before leaving the counter.',
+    'Please verify items before leaving the counter.',
     'All disputes are subject to local jurisdiction only.',
   ];
   terms.forEach(t => {
-    doc.text('•  ' + t, MARGIN, ly, {maxWidth: leftColW});
-    ly += 11;
+    const lines = doc.splitTextToSize('•  ' + t, col3X - col2X - 140);
+    doc.text(lines, col2X, ly2);
+    ly2 += lines.length * 10;
   });
+  maxContentY = Math.max(maxContentY, ly2);
 
-  // Signature block, right side
-  const sigX = PAGE_W - MARGIN;
+  // Column 3: Signature block
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
   doc.setTextColor(...muted);
-  doc.text('For ' + sellerName, sigX, bottomY + 22, {align:'right'});
+  doc.text('For ' + sellerName, col3X, bottomY + 20, {align:'right'});
   doc.setDrawColor(...border);
-  doc.line(sigX - 130, bottomY + 75, sigX, bottomY + 75);
+  doc.line(col3X - 130, bottomY + 65, col3X, bottomY + 65);
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
   doc.setTextColor(...muted);
-  doc.text('Authorised Signatory', sigX, bottomY + 88, {align:'right'});
+  doc.text('Authorised Signatory', col3X, bottomY + 78, {align:'right'});
+  maxContentY = Math.max(maxContentY, bottomY + 78);
 
-  // ---- Footer ----
+  // ---- Footer — positioned dynamically after whatever content actually ended up above it ----
+  const footerY = Math.min(maxContentY + 14, PAGE_H - 22);
   doc.setDrawColor(...border);
-  doc.line(MARGIN, 772, PAGE_W - MARGIN, 772);
-  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.line(MARGIN, footerY, PAGE_W - MARGIN, footerY);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
   doc.setTextColor(...muted);
-  doc.text('This is a computer-generated invoice.' + (isGstBill ? ' GST rates shown are as entered by the seller.' : ''), MARGIN, 784);
-  doc.text('Billing powered by ShreeLix  ·  support.shreelix@gmail.com  ·  +91 88401 77216', MARGIN, 796);
+  doc.text('This is a computer-generated invoice' + (isGstBill ? ' — GST rates shown are as entered by the seller.' : '.') + '  Billing powered by ShreeLix · support.shreelix@gmail.com · +91 88401 77216', MARGIN, footerY + 12);
 
   doc.save((sellerName.replace(/[^a-zA-Z0-9]/g,'-')) + '-Invoice-' + bill.id + '.pdf');
 }
