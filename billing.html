@@ -2177,27 +2177,30 @@ function generateInvoicePDF(bill){
     y += 16;
     doc.setFont('helvetica','normal'); doc.setFontSize(10);
     rowData.forEach(({item, displayName, rowH}, idx) => {
+      const rowTop = y - 14;
       if (idx % 2 === 1) {
         doc.setFillColor(...lightBg);
-        doc.rect(MARGIN, y - 14, CONTENT_W, rowH, 'F');
+        doc.rect(MARGIN, rowTop, CONTENT_W, rowH, 'F');
       }
+      const singleLineY = rowTop + rowH/2 + 3.5;
+      const productY = rowTop + rowH/2 - (displayName.length - 1) * 6.5 + 3.5;
       doc.setTextColor(...dark);
-      doc.text(String(idx+1), cols[0].x, y);
-      doc.text(displayName, cols[1].x, y);
+      doc.text(String(idx+1), cols[0].x, singleLineY);
+      doc.text(displayName, cols[1].x, productY);
       doc.setTextColor(...muted);
-      doc.text(item.hsn_code || '—', cols[2].x, y, {align:'right'});
-      doc.text(item.purity || '—', cols[3].x, y, {align:'right'});
-      doc.text((item.gross_weight ?? 0).toString(), cols[4].x, y, {align:'right'});
-      doc.text((item.stone_weight ?? 0).toString(), cols[5].x, y, {align:'right'});
-      doc.text((item.making_charge_amount ?? 0).toLocaleString('en-IN'), cols[6].x, y, {align:'right'});
-      doc.text((item.net_weight ?? item.gross_weight ?? 0).toString(), cols[7].x, y, {align:'right'});
-      doc.text(item.unit_price.toLocaleString('en-IN'), cols[8].x, y, {align:'right'});
-      doc.text(item.taxable_value.toLocaleString('en-IN'), cols[9].x, y, {align:'right'});
-      doc.text(item.gst_rate + '%', cols[10].x, y, {align:'right'});
-      doc.text(item.tax_amount.toLocaleString('en-IN'), cols[11].x, y, {align:'right'});
+      doc.text(item.hsn_code || '—', cols[2].x, singleLineY, {align:'right'});
+      doc.text(item.purity || '—', cols[3].x, singleLineY, {align:'right'});
+      doc.text((item.gross_weight ?? 0).toString(), cols[4].x, singleLineY, {align:'right'});
+      doc.text((item.stone_weight ?? 0).toString(), cols[5].x, singleLineY, {align:'right'});
+      doc.text((item.making_charge_amount ?? 0).toLocaleString('en-IN'), cols[6].x, singleLineY, {align:'right'});
+      doc.text((item.net_weight ?? item.gross_weight ?? 0).toString(), cols[7].x, singleLineY, {align:'right'});
+      doc.text(item.unit_price.toLocaleString('en-IN'), cols[8].x, singleLineY, {align:'right'});
+      doc.text(item.taxable_value.toLocaleString('en-IN'), cols[9].x, singleLineY, {align:'right'});
+      doc.text(item.gst_rate + '%', cols[10].x, singleLineY, {align:'right'});
+      doc.text(item.tax_amount.toLocaleString('en-IN'), cols[11].x, singleLineY, {align:'right'});
       doc.setTextColor(...dark);
       doc.setFont('helvetica','bold');
-      doc.text(item.line_total.toLocaleString('en-IN'), cols[12].x, y, {align:'right'});
+      doc.text(item.line_total.toLocaleString('en-IN'), cols[12].x, singleLineY, {align:'right'});
       doc.setFont('helvetica','normal');
       y += rowH;
     });
@@ -2255,23 +2258,26 @@ function generateInvoicePDF(bill){
   y += 14;
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   rowData.forEach(({item, nameLines, rowH}, idx) => {
+    const rowTop = y - 13;
     if (idx % 2 === 1) {
       doc.setFillColor(...lightBg);
-      doc.rect(MARGIN, y - 13, CONTENT_W, rowH, 'F');
+      doc.rect(MARGIN, rowTop, CONTENT_W, rowH, 'F');
     }
+    const singleLineY = rowTop + rowH/2 + 3.5;
+    const nameY = rowTop + rowH/2 - (nameLines.length - 1) * 6.5 + 3.5;
     doc.setTextColor(...dark);
-    doc.text(nameLines, MARGIN + 10, y);
+    doc.text(nameLines, MARGIN + 10, nameY);
     doc.setTextColor(...muted);
-    if (isGstBill) doc.text(item.hsn_code || '—', MARGIN + 230, y, {align:'right'});
-    doc.text(String(item.quantity), MARGIN + 268, y, {align:'right'});
-    doc.text(item.unit_price.toLocaleString('en-IN'), MARGIN + 315, y, {align:'right'});
+    if (isGstBill) doc.text(item.hsn_code || '—', MARGIN + 230, singleLineY, {align:'right'});
+    doc.text(String(item.quantity), MARGIN + 268, singleLineY, {align:'right'});
+    doc.text(item.unit_price.toLocaleString('en-IN'), MARGIN + 315, singleLineY, {align:'right'});
     if (isGstBill) {
-      doc.text(item.taxable_value.toLocaleString('en-IN'), MARGIN + 380, y, {align:'right'});
-      doc.text(item.gst_rate + '%', MARGIN + 420, y, {align:'right'});
+      doc.text(item.taxable_value.toLocaleString('en-IN'), MARGIN + 380, singleLineY, {align:'right'});
+      doc.text(item.gst_rate + '%', MARGIN + 420, singleLineY, {align:'right'});
     }
     doc.setTextColor(...dark);
     doc.setFont('helvetica','bold');
-    doc.text('Rs. '+item.line_total.toLocaleString('en-IN'), PAGE_W - MARGIN - 10, y, {align:'right'});
+    doc.text('Rs. '+item.line_total.toLocaleString('en-IN'), PAGE_W - MARGIN - 10, singleLineY, {align:'right'});
     doc.setFont('helvetica','normal');
     y += rowH;
   });
@@ -2295,6 +2301,7 @@ function generateInvoicePDF(bill){
   // ---- Summary block (right-aligned, clean) ----
   const sumX = PAGE_W - MARGIN - 170;
   const sumValX = PAGE_W - MARGIN - 10;
+  const summaryTop = y - 12;
   doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
   doc.setTextColor(...muted);
   doc.text('Subtotal', sumX, y);
@@ -2365,6 +2372,10 @@ function generateInvoicePDF(bill){
     doc.text(sign + 'Rs. ' + Math.abs(bill.round_off_amount).toFixed(2), sumValX, y, {align:'right'});
     y += 16;
   }
+
+  doc.setDrawColor(200,210,222);
+  doc.setLineWidth(1);
+  doc.rect(sumX - 14, summaryTop, sumValX - sumX + 28, y - summaryTop - 4);
 
   y += 4;
   doc.setFillColor(...navy);
