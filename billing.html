@@ -726,8 +726,10 @@
         <li>Everything in Free, no limits</li>
         <li>Priority support</li>
       </ul>
+      <button class="btn" id="upgradeNowBtn" onclick="startUpgradePayment()" style="margin-top:14px;">Upgrade now — pay ₹299</button>
+      <div id="upgradeStatus" style="font-size:12px;color:var(--muted);margin-top:8px;text-align:center;"></div>
     </div>
-    <p style="font-size:11.5px;color:var(--muted);margin-top:14px;text-align:center;">Introductory pricing for early users — call or WhatsApp <b>+91 88401 77216</b> to upgrade anytime.</p>
+    <p style="font-size:11.5px;color:var(--muted);margin-top:14px;text-align:center;">Prefer to talk first? Call or WhatsApp <b>+91 88401 77216</b>.</p>
   </div>
 </div>
 
@@ -770,6 +772,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const API = "https://retail-billing-system-hmq4.onrender.com";
@@ -785,6 +788,14 @@ function toast(msg, isError=false){
   setTimeout(()=> t.className = 'toast', 2800);
 }
 function money(n){ return '₹' + Number(n).toLocaleString('en-IN', {minimumFractionDigits:0, maximumFractionDigits:2}); }
+// The backend sends timestamps without a UTC marker (e.g. "2026-08-06T09:23:00"), which JS would
+// otherwise wrongly treat as already-local time. Appending 'Z' forces correct UTC interpretation,
+// so toLocaleString/toLocaleDateString/toLocaleTimeString then correctly convert to the viewer's local time.
+function parseUTCDate(dateStr){
+  if (!dateStr) return null;
+  const hasTZ = /Z$|[+-]\d{2}:?\d{2}$/.test(dateStr);
+  return new Date(hasTZ ? dateStr : dateStr + 'Z');
+}
 
 async function api(path, opts={}) {
   const res = await fetch(API + path, {
@@ -1246,7 +1257,7 @@ async function loadMembers(){
         <tr>
           <td>${escapeHtml(m.name)}${m.phone ? '<br><span style="font-size:11.5px;color:var(--muted);">' + escapeHtml(m.phone) + '</span>' : ''}</td>
           <td>${escapeHtml(m.plan_name)}</td>
-          <td style="font-size:12.5px;color:var(--muted);">${new Date(m.end_date).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</td>
+          <td style="font-size:12.5px;color:var(--muted);">${parseUTCDate(m.end_date).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})}</td>
           <td><span style="font-size:11.5px;font-weight:700;color:${statusColors[m.status]};text-transform:uppercase;">${statusLabels[m.status]}</span></td>
           <td><button class="btn small" style="width:auto;" onclick="renewMember(${m.id})">Renew</button></td>
         </tr>
@@ -1260,7 +1271,7 @@ async function loadMembers(){
 async function renewMember(memberId){
   try {
     const result = await api(`/membership/members/${memberId}/renew?payment_mode=cash`, {method:'POST'});
-    toast(`Renewed — new expiry ${new Date(result.end_date).toLocaleDateString('en-IN')}`);
+    toast(`Renewed — new expiry ${parseUTCDate(result.end_date).toLocaleDateString('en-IN')}`);
     loadMembers();
     loadDashboard();
   } catch(e) {
@@ -1282,7 +1293,7 @@ async function loadMetalRates(){
       rates.map(r => `
         <div style="display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:6px 14px;margin:0 8px 8px 0;font-size:12.5px;">
           <b>${escapeHtml(r.metal_type)}</b>: ${money(r.rate_per_gram)}/g
-          <span style="color:var(--muted-soft);font-size:11px;">${new Date(r.updated_at).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</span>
+          <span style="color:var(--muted-soft);font-size:11px;">${parseUTCDate(r.updated_at).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</span>
         </div>
       `).join('');
   } catch(e) { /* non-critical for the Inventory display — billing itself will show a clear error if a rate is missing */ }
@@ -2102,7 +2113,7 @@ function generateInvoicePDF(bill){
   if (bill.customer_phone) { doc.text('Ph: ' + bill.customer_phone, MARGIN + 16, by); by += 13; }
   if (bill.customer_gstin) { doc.text('GSTIN: ' + bill.customer_gstin, MARGIN + 16, by); }
 
-  const dateStr = new Date(bill.created_at).toLocaleDateString('en-IN', {dateStyle:'medium'});
+  const dateStr = parseUTCDate(bill.created_at).toLocaleDateString('en-IN', {dateStyle:'medium'});
   const rx = MARGIN + colW + 36;
   doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
   doc.setTextColor(...muted);
@@ -2533,7 +2544,7 @@ async function loadHistory(){
     }
     let rows = bills.map(b => {
       const itemsSummary = b.items.map(i => `${i.quantity}× ${escapeHtml(i.product_name)}`).join(', ');
-      const date = new Date(b.created_at).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'});
+      const date = parseUTCDate(b.created_at).toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'});
       const paymentBadge = b.due_amount > 0
         ? `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--red-bg);color:var(--red);">Due ${money(b.due_amount)}</span>`
         : `<span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--green-bg);color:var(--green);">Paid</span>`;
@@ -2608,7 +2619,7 @@ async function loadDashboard(){
           <tr>
             <td>#${b.id}</td>
             <td class="num">${money(b.total_amount)}</td>
-            <td style="color:var(--muted);font-size:12.5px;">${new Date(b.created_at).toLocaleDateString('en-IN', {dateStyle:'medium'})}</td>
+            <td style="color:var(--muted);font-size:12.5px;">${parseUTCDate(b.created_at).toLocaleDateString('en-IN', {dateStyle:'medium'})}</td>
           </tr>
         `).join('')}</tbody>
       </table>`;
@@ -2995,6 +3006,60 @@ function showCrossSell(){
 function openPricing(e){
   if (e) e.preventDefault();
   document.getElementById('pricingOverlay').style.display = 'flex';
+}
+
+async function startUpgradePayment(){
+  if (!USER_TOKEN) { toast('Please sign in first', true); return; }
+  const btn = document.getElementById('upgradeNowBtn');
+  const statusEl = document.getElementById('upgradeStatus');
+  btn.disabled = true; btn.textContent = 'Starting payment…';
+  statusEl.textContent = '';
+
+  try {
+    const order = await api('/razorpay/create-order', {method:'POST', body: JSON.stringify({owner_token: USER_TOKEN})});
+
+    const rzp = new Razorpay({
+      key: order.key_id,
+      amount: order.amount,
+      currency: order.currency,
+      order_id: order.order_id,
+      name: 'ShreeLix Billing',
+      description: 'Pro subscription — 30 days',
+      theme: { color: '#0B1F3A' },
+      handler: async function(response){
+        statusEl.textContent = 'Verifying payment…';
+        try {
+          await api('/razorpay/verify-payment', {method:'POST', body: JSON.stringify({
+            owner_token: USER_TOKEN,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+          })});
+          statusEl.style.color = 'var(--green)';
+          statusEl.textContent = 'Payment successful — you\'re on Pro now!';
+          toast('Upgraded to Pro');
+          await refreshTokenStatus();
+          setTimeout(() => { document.getElementById('pricingOverlay').style.display = 'none'; }, 1500);
+        } catch(e) {
+          statusEl.style.color = 'var(--red)';
+          statusEl.textContent = 'Payment received but verification failed — contact support with your payment ID.';
+        } finally {
+          btn.disabled = false; btn.textContent = 'Upgrade now — pay ₹299';
+        }
+      },
+      modal: {
+        ondismiss: function(){
+          btn.disabled = false; btn.textContent = 'Upgrade now — pay ₹299';
+        },
+      },
+    });
+    rzp.open();
+    btn.disabled = false; btn.textContent = 'Upgrade now — pay ₹299';
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.textContent = e.message || "Couldn't start payment — please try again";
+    btn.disabled = false; btn.textContent = 'Upgrade now — pay ₹299';
+  }
 }
 
 function closeCrossSell(){
