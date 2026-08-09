@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blog — ShreeLix</title>
+<meta name="description" content="Practical guides on business automation, GST billing, and building smarter workflows — from the team behind ShreeLix Billing and ShreeLix Automate.">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0B1F3A;--blue:#1E90FF;--blue-deep:#0B5FCC;--purple:#7C5CFC;--bg:#F8FAFC;--card:#FFFFFF;--text:#1E293B;--muted:#5B6B82;--border:#E3E8F0;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;}
+  h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--navy);}
+  a{text-decoration:none;color:inherit;}
+  .wrap{max-width:900px;margin:0 auto;padding:0 24px;}
+  nav{position:sticky;top:0;z-index:50;background:rgba(248,250,252,0.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+  nav .wrap{max-width:1080px;display:flex;align-items:center;justify-content:space-between;height:70px;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-weight:700;font-size:19px;color:var(--navy);}
+  .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;}
+  .nav-cta{background:var(--navy);color:#fff;padding:9px 18px;border-radius:8px;font-size:13.5px;font-weight:600;}
+
+  .hero{padding:56px 0 40px;text-align:center;}
+  .hero h1{font-size:36px;font-weight:800;margin-bottom:14px;}
+  .hero p{color:var(--muted);font-size:16px;max-width:520px;margin:0 auto;}
+
+  .posts{padding:20px 0 72px;display:flex;flex-direction:column;gap:20px;}
+  .post-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;display:block;transition:border-color .15s ease, transform .15s ease;}
+  .post-card:hover{border-color:var(--blue);transform:translateY(-2px);}
+  .post-tag{display:inline-block;background:#EAF2FF;color:var(--blue-deep);font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.03em;}
+  .post-card h2{font-size:21px;font-weight:700;margin-bottom:8px;}
+  .post-card p{color:var(--muted);font-size:14.5px;margin-bottom:12px;}
+  .post-meta{font-size:12.5px;color:var(--muted);}
+  .read-more{color:var(--blue-deep);font-weight:600;font-size:13.5px;}
+
+  footer{padding:32px 0;text-align:center;font-size:13px;color:var(--muted);border-top:1px solid var(--border);}
+  footer a{color:var(--blue-deep);margin:0 10px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="index.html" class="brand"><span class="mark">S</span> ShreeLix</a>
+    <a href="index.html#contact" class="nav-cta">Get in touch</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>The ShreeLix Blog</h1>
+    <p>Practical guides on business automation, billing, and building smarter workflows.</p>
+  </div>
+</header>
+
+<section class="posts">
+  <div class="wrap">
+    <a class="post-card" href="blog-bulk-email-personalization.html">
+      <span class="post-tag">Automate</span>
+      <h2>How Bulk Email Personalization Actually Works</h2>
+      <p>Sending "Dear Customer" to your whole list isn't personalization — it's a mail merge with extra steps. Here's what real personalization looks like, and how to set it up without writing any code.</p>
+      <div class="post-meta">6 min read · <span class="read-more">Read the guide →</span></div>
+    </a>
+
+    <a class="post-card" href="blog-gst-billing-basics.html">
+      <span class="post-tag">Billing</span>
+      <h2>GST Billing Basics Every Small Business Owner Should Know</h2>
+      <p>GSTIN, HSN codes, CGST vs SGST vs IGST, B2B vs walk-in invoices — a plain-language breakdown of what your invoices actually need to be compliant, and the mistakes that trip up most first-time filers.</p>
+      <div class="post-meta">7 min read · <span class="read-more">Read the guide →</span></div>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div style="margin-bottom:10px;">© 2026 ShreeLix. Building Smart Solutions.</div>
+    <a href="index.html">Home</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="terms.html">Terms of Service</a>
+  </div>
+</footer>
+
+</body>
+</html>
