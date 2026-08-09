@@ -9,6 +9,61 @@
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 <link rel="shortcut icon" href="/favicon.ico">
 <meta name="description" content="ShreeLix delivers end-to-end digital solutions — custom software, AI, cloud, mobile & web apps, cybersecurity, data analytics, IoT, and enterprise systems — for businesses across every industry.">
+
+<!-- Open Graph — controls how this page looks when shared on LinkedIn, WhatsApp, Facebook, etc. -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://shreelix.com/">
+<meta property="og:title" content="ShreeLix — Building Smart Solutions">
+<meta property="og:description" content="End-to-end digital solutions — custom software, AI, cloud, mobile & web apps, cybersecurity, data analytics, IoT, and enterprise systems for businesses across every industry.">
+<meta property="og:image" content="https://shreelix.com/favicon-512.png">
+<meta property="og:site_name" content="ShreeLix">
+
+<!-- Twitter Card — controls how this page looks when shared on Twitter/X -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ShreeLix — Building Smart Solutions">
+<meta name="twitter:description" content="End-to-end digital solutions — custom software, AI, cloud, mobile & web apps, cybersecurity, data analytics, IoT, and enterprise systems for businesses across every industry.">
+<meta name="twitter:image" content="https://shreelix.com/favicon-512.png">
+
+<!-- Schema.org structured data — helps Google understand this is a real organization, and what it does -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ShreeLix",
+  "url": "https://shreelix.com",
+  "logo": "https://shreelix.com/favicon-512.png",
+  "description": "ShreeLix delivers end-to-end digital solutions — custom software, AI, cloud, mobile & web apps, cybersecurity, data analytics, IoT, and enterprise systems for businesses across every industry.",
+  "founder": {
+    "@type": "Person",
+    "name": "Rupa Barua"
+  },
+  "sameAs": [
+    "https://github.com/ShreeLixTech"
+  ],
+  "makesOffer": [
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@type": "SoftwareApplication",
+        "name": "ShreeLix Billing",
+        "applicationCategory": "BusinessApplication",
+        "url": "https://shreelix.com/billing.html",
+        "description": "GST-compliant billing, inventory, and invoicing software for shops and businesses in India."
+      }
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@type": "SoftwareApplication",
+        "name": "ShreeLix Automate",
+        "applicationCategory": "BusinessApplication",
+        "url": "https://automate.shreelix.com",
+        "description": "Workflow automation for business teams — send bulk personalized email, auto-generate documents, and trigger alerts from other apps, without coding."
+      }
+    }
+  ]
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -175,6 +230,14 @@
   footer .f-tag{color:var(--muted);font-size:13px;}
   footer .f-links{display:flex;gap:20px;font-size:13px;color:var(--muted);}
 </style>
+<!-- Google Analytics — tracking ShreeLix's official GA4 property -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-R22J9KQ3MX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-R22J9KQ3MX');
+</script>
 </head>
 <body>
 
@@ -225,7 +288,13 @@
           <span style="width:7px;height:7px;border-radius:50%;background:#4ADE80;display:inline-block;"></span> NOW LIVE — FREE TO START
         </div>
         <h2 style="color:#fff;font-size:28px;font-weight:700;margin-bottom:12px;">ShreeLix Billing</h2>
-        <p style="color:rgba(255,255,255,0.78);font-size:15px;">GST-compliant billing, inventory, and invoicing for your business — free to start, upgrade when you're ready. This isn't a demo, it's a real product you can use today.</p>
+        <p style="color:rgba(255,255,255,0.78);font-size:15px;margin-bottom:18px;">GST-compliant billing, inventory, and invoicing for your business — free to start, upgrade when you're ready. This isn't a demo, it's a real product you can use today.</p>
+        <ul style="list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
+          <li style="color:rgba(255,255,255,0.85);font-size:13px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;color:#4ADE80;">✓</span>GST invoices — B2B and walk-in customers</li>
+          <li style="color:rgba(255,255,255,0.85);font-size:13px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;color:#4ADE80;">✓</span>Inventory tracking with tax rates built in</li>
+          <li style="color:rgba(255,255,255,0.85);font-size:13px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;color:#4ADE80;">✓</span>Jewelry, pharmacy, restaurant &amp; more modes</li>
+          <li style="color:rgba(255,255,255,0.85);font-size:13px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;color:#4ADE80;">✓</span>Live dashboard for revenue &amp; stock</li>
+        </ul>
       </div>
       <a href="billing.html" style="background:#fff;color:var(--navy);padding:15px 30px;border-radius:9px;font-weight:700;font-size:15px;white-space:nowrap;">Use it free →</a>
     </div>
@@ -240,7 +309,13 @@
           <span style="width:7px;height:7px;border-radius:50%;background:#4ADE80;display:inline-block;"></span> NOW LIVE — FREE TO START
         </div>
         <h2 style="color:#fff;font-size:28px;font-weight:700;margin-bottom:12px;">ShreeLix Automate</h2>
-        <p style="color:rgba(255,255,255,0.78);font-size:15px;">Send messages, alerts, and reports automatically — from your own Gmail, in bulk from a spreadsheet, or triggered the moment another app notifies you. No coding required.</p>
+        <p style="color:rgba(255,255,255,0.78);font-size:15px;margin-bottom:18px;">Send messages, alerts, and reports automatically — from your own Gmail, in bulk from a spreadsheet, or triggered the moment another app notifies you. No coding required.</p>
+        <ul style="list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;">
+          <li style="color:rgba(255,255,255,0.85);font-size:13px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;color:#4ADE80;">✓</span>Personalized bulk email from a Sheet or CSV</li>
+          <li style="color:rgba(255,255,255,0.85);font-size:13px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;color:#4ADE80;">✓</span>Auto-generated documents per person</li>
+          <li style="color:rgba(255,255,255,0.85);font-size:13px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;color:#4ADE80;">✓</span>Recurring schedules — daily, weekly, or once</li>
+          <li style="color:rgba(255,255,255,0.85);font-size:13px;padding-left:20px;position:relative;"><span style="position:absolute;left:0;color:#4ADE80;">✓</span>Connects to Slack, Discord, and Teams too</li>
+        </ul>
       </div>
       <a href="https://automate.shreelix.com" style="background:#fff;color:var(--navy);padding:15px 30px;border-radius:9px;font-weight:700;font-size:15px;white-space:nowrap;">Use it free →</a>
     </div>
