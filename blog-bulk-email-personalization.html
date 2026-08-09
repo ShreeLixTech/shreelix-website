@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Bulk Email Personalization Actually Works — ShreeLix</title>
+<meta name="description" content="Real email personalization goes far beyond {{name}} in the subject line. Here's how merge-based personalization actually works, what it can do, and how to set it up without writing code.">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0B1F3A;--blue:#1E90FF;--blue-deep:#0B5FCC;--purple:#7C5CFC;--bg:#F8FAFC;--card:#FFFFFF;--text:#1E293B;--muted:#5B6B82;--border:#E3E8F0;--green:#0E7A45;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;}
+  h1,h2,h3{font-family:'Poppins',sans-serif;color:var(--navy);}
+  a{color:var(--blue-deep);}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+  nav{position:sticky;top:0;z-index:50;background:rgba(248,250,252,0.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);}
+  nav .wrap{max-width:1080px;display:flex;align-items:center;justify-content:space-between;height:70px;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Poppins',sans-serif;font-weight:700;font-size:19px;color:var(--navy);text-decoration:none;}
+  .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;}
+  .nav-cta{background:var(--navy);color:#fff;padding:9px 18px;border-radius:8px;font-size:13.5px;font-weight:600;text-decoration:none;}
+
+  article{padding:48px 0 64px;}
+  .breadcrumb{font-size:13px;color:var(--muted);margin-bottom:20px;}
+  .post-tag{display:inline-block;background:#EAF2FF;color:var(--blue-deep);font-size:11.5px;font-weight:700;padding:4px 12px;border-radius:999px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.03em;}
+  h1.title{font-size:34px;font-weight:800;line-height:1.2;margin-bottom:14px;}
+  .subtitle{font-size:16.5px;color:var(--muted);margin-bottom:24px;}
+  .meta{font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:32px;}
+
+  article h2{font-size:23px;margin:36px 0 14px;}
+  article h3{font-size:18px;margin:26px 0 10px;}
+  article p{font-size:15.5px;color:var(--text);margin-bottom:16px;}
+  article ul, article ol{margin:0 0 16px 22px;font-size:15.5px;}
+  article li{margin-bottom:8px;}
+  article code{background:#EEF1F5;padding:2px 7px;border-radius:5px;font-size:13.5px;color:var(--navy);}
+  .callout{background:#EAF2FF;border-left:3px solid var(--blue);border-radius:8px;padding:18px 22px;margin:24px 0;font-size:14.5px;}
+  .callout b{color:var(--navy);}
+
+  .cta-box{background:linear-gradient(135deg,var(--navy),var(--purple));border-radius:16px;padding:32px;margin-top:40px;text-align:center;}
+  .cta-box h3{color:#fff;font-size:20px;margin-bottom:10px;}
+  .cta-box p{color:rgba(255,255,255,0.8);font-size:14px;margin-bottom:18px;}
+  .cta-box a{display:inline-block;background:#fff;color:var(--navy);padding:12px 26px;border-radius:9px;font-weight:700;font-size:14.5px;text-decoration:none;}
+
+  footer{padding:32px 0;text-align:center;font-size:13px;color:var(--muted);border-top:1px solid var(--border);}
+  footer a{color:var(--blue-deep);margin:0 10px;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="index.html" class="brand"><span class="mark">S</span> ShreeLix</a>
+    <a href="index.html#contact" class="nav-cta">Get in touch</a>
+  </div>
+</nav>
+
+<article class="wrap">
+  <div class="breadcrumb"><a href="blog.html">Blog</a> / Automate</div>
+  <span class="post-tag">Automate</span>
+  <h1 class="title">How Bulk Email Personalization Actually Works</h1>
+  <p class="subtitle">Sending "Dear Customer" to your entire list isn't personalization — it's a mail merge with extra steps. Here's what real personalization looks like, and how to set it up without writing any code.</p>
+  <div class="meta">6 min read</div>
+
+  <h2>The problem with "personalized" bulk email</h2>
+  <p>Most tools that call themselves "personalized email" only go as far as putting someone's first name in the greeting. That's not nothing, but it's also not what makes a message feel like it was actually written for the person reading it. Real personalization means every relevant detail in the message — not just the name — reflects that specific person's actual situation.</p>
+  <p>The difference shows up immediately to the reader. Compare these two versions of the same reminder:</p>
+  <ul>
+    <li><b>Generic:</b> "Hi, this is a reminder that you have an outstanding balance. Please pay at your earliest convenience."</li>
+    <li><b>Personalized:</b> "Hi Priya, your invoice #4521 for ₹12,400 was due on 3 August. You can pay directly using the link below."</li>
+  </ul>
+  <p>The second one took no more effort to send than the first — it just used data that was already sitting in a spreadsheet.</p>
+
+  <h2>How merge-based personalization actually works</h2>
+  <p>The underlying mechanism is simpler than it sounds. You write your message once, using placeholders — sometimes called <code>{{merge tags}}</code> — that mark where personal data should go:</p>
+  <div class="callout">
+    "Hi <code>{{name}}</code>, your invoice <code>{{invoice_number}}</code> for <code>{{amount}}</code> was due on <code>{{due_date}}</code>."
+  </div>
+  <p>Then you connect this message to a data source — usually a spreadsheet, where each row is one person and each column is one piece of information (name, invoice number, amount, due date, and so on). The system reads the sheet row by row, and for every row, it swaps each placeholder for that row's actual value, then sends the result.</p>
+  <p>Send 200 rows, and you get 200 individually personalized messages — not one message sent 200 times.</p>
+
+  <h3>What actually goes in the columns</h3>
+  <p>Placeholders aren't limited to names. Anything that's a column in your sheet can be a placeholder in your message:</p>
+  <ul>
+    <li>Financial details — amount owed, amount paid, due date</li>
+    <li>Status — order status, membership tier, renewal date</li>
+    <li>Context — last purchase, appointment time, assigned representative</li>
+    <li>Anything else that's genuinely different per person and sitting in a column</li>
+  </ul>
+
+  <h2>Where this earns its keep</h2>
+  <p>A few situations where merge-based personalization is clearly worth setting up over sending things manually:</p>
+  <ul>
+    <li><b>Payment reminders</b> — every customer has a different amount and due date; a generic reminder either says too little or forces you to send each one by hand.</li>
+    <li><b>Renewal or expiry notices</b> — membership, subscription, or license expiry dates are different for everyone on the list.</li>
+    <li><b>Event confirmations</b> — seat number, session time, or table assignment, sent to hundreds of attendees at once.</li>
+    <li><b>Status updates</b> — order shipped, application received, ticket resolved — anything where the underlying fact differs per recipient.</li>
+  </ul>
+
+  <h2>Conditional sending — not everyone should get the same message</h2>
+  <p>The next level beyond personalization is deciding <i>who</i> gets a message at all. A condition lets you filter the list before sending — for example, only messaging rows where a "status" column equals "overdue", so people who've already paid don't get a reminder they don't need.</p>
+  <p>This matters more than it might sound: sending an irrelevant message erodes trust in every message that follows it. A payment reminder to someone who already paid doesn't read as a minor slip — it reads as "this system doesn't actually know what's going on."</p>
+
+  <h2>What you actually need to set this up</h2>
+  <ol>
+    <li>A spreadsheet with one row per person, and a column for anything you want to personalize</li>
+    <li>A message template with placeholders matching your column names</li>
+    <li>A way to connect the two and send — this is the only part that typically needs a tool, since doing it manually means hand-editing and sending 200 individual emails</li>
+  </ol>
+  <p>You don't need to be technical to do this. The placeholder syntax is just typing a column name inside double curly braces — no code, no scripting, no developer required.</p>
+
+  <div class="cta-box">
+    <h3>Try this without writing a line of code</h3>
+    <p>ShreeLix Automate connects to your own Gmail and does exactly this — personalized bulk email from a Google Sheet or an uploaded CSV/Excel file, with optional conditions and automatic document generation. Free to start.</p>
+    <a href="https://automate.shreelix.com">Try ShreeLix Automate →</a>
+  </div>
+</article>
+
+<footer>
+  <div class="wrap">
+    <div style="margin-bottom:10px;">© 2026 ShreeLix. Building Smart Solutions.</div>
+    <a href="index.html">Home</a>
+    <a href="blog.html">Blog</a>
+    <a href="privacy.html">Privacy Policy</a>
+  </div>
+</footer>
+
+</body>
+</html>
